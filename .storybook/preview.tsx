@@ -21,7 +21,7 @@ const preview: Preview = {
     layout: 'fullscreen',
     options: {
       storySort: {
-        order: ['Getting Started', ['Usage', 'Changelog'], 'Components'],
+        order: ['Getting Started', ['Introduction', 'Usage', 'Changelog'], 'FlowChart'],
       },
     },
   },
