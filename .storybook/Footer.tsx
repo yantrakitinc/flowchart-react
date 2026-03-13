@@ -23,14 +23,10 @@ export function Footer() {
       <a
         href="https://www.npmjs.com/package/@yantrakit/flowchart-react"
         target="_blank"
-        rel="noopener noreferrer"
         style={{
           color: '#cb3837',
           textDecoration: 'none',
           fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
         }}
       >
         npm
