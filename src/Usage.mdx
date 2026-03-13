@@ -16,6 +16,69 @@ pnpm add @yantrakit/flowchart-react
 yarn add @yantrakit/flowchart-react
 ```
 
+## Props
+
+<table>
+  <thead>
+    <tr>
+      <th>Prop</th>
+      <th>Type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>flow</code></td>
+      <td><code>iFlowDefinition</code></td>
+      <td>Yes</td>
+      <td>The flow definition containing nodes and edges</td>
+    </tr>
+    <tr>
+      <td><code>config</code></td>
+      <td><code>iLayoutConfig</code></td>
+      <td>No</td>
+      <td>Layout configuration (node size, spacing, padding)</td>
+    </tr>
+    <tr>
+      <td><code>activeNodeId</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>ID of the currently active/highlighted node</td>
+    </tr>
+    <tr>
+      <td><code>selectedPathId</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>ID of the selected path to highlight</td>
+    </tr>
+    <tr>
+      <td><code>onNodeClick</code></td>
+      <td><code>(node: iFlowNode) =&gt; void</code></td>
+      <td>No</td>
+      <td>Callback when a node is clicked</td>
+    </tr>
+    <tr>
+      <td><code>onPathChange</code></td>
+      <td><code>(pathId: string | null) =&gt; void</code></td>
+      <td>No</td>
+      <td>Callback when path selection changes</td>
+    </tr>
+    <tr>
+      <td><code>pathDrawerPosition</code></td>
+      <td><code>'top' | 'bottom' | 'left' | 'right'</code></td>
+      <td>No</td>
+      <td>Position of the path selector drawer</td>
+    </tr>
+    <tr>
+      <td><code>className</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Additional CSS class for the container</td>
+    </tr>
+  </tbody>
+</table>
+
 ## Basic Usage
 
 ```tsx
@@ -128,6 +191,84 @@ function App() {
   </tbody>
 </table>
 
+## Node Properties
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>Unique identifier for the node</td>
+    </tr>
+    <tr>
+      <td><code>label</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>Display text shown in the node</td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td><code>iNodeType</code></td>
+      <td>Yes</td>
+      <td>Node type (start, end, action, decision, error, warning, link)</td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Optional description (shown on hover)</td>
+    </tr>
+  </tbody>
+</table>
+
+## Edge Properties
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>from</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>ID of the source node</td>
+    </tr>
+    <tr>
+      <td><code>to</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>ID of the target node</td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td><code>iEdgeType</code></td>
+      <td>No</td>
+      <td>Edge type (happy, error, warning, default)</td>
+    </tr>
+    <tr>
+      <td><code>label</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Text label shown on the edge</td>
+    </tr>
+  </tbody>
+</table>
+
 ## Interactive Features
 
 ### Handle Node Clicks
@@ -187,14 +328,57 @@ function App() {
 <FlowChart
   flow={flow}
   config={{
-    nodeWidth: 200,          // Default: 180
-    nodeHeight: 80,          // Default: 60
-    horizontalSpacing: 200,  // Default: 150
-    verticalSpacing: 150,    // Default: 100
-    padding: 150,            // Default: 100
+    nodeWidth: 200,
+    nodeHeight: 80,
+    horizontalSpacing: 200,
+    verticalSpacing: 150,
+    padding: 150,
   }}
 />
 ```
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Type</th>
+      <th>Default</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>nodeWidth</code></td>
+      <td><code>number</code></td>
+      <td>180</td>
+      <td>Width of each node in pixels</td>
+    </tr>
+    <tr>
+      <td><code>nodeHeight</code></td>
+      <td><code>number</code></td>
+      <td>60</td>
+      <td>Height of each node in pixels</td>
+    </tr>
+    <tr>
+      <td><code>horizontalSpacing</code></td>
+      <td><code>number</code></td>
+      <td>150</td>
+      <td>Horizontal space between nodes</td>
+    </tr>
+    <tr>
+      <td><code>verticalSpacing</code></td>
+      <td><code>number</code></td>
+      <td>100</td>
+      <td>Vertical space between levels</td>
+    </tr>
+    <tr>
+      <td><code>padding</code></td>
+      <td><code>number</code></td>
+      <td>100</td>
+      <td>Padding around the entire chart</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Path Drawer Position
 
