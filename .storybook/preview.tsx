@@ -1,4 +1,6 @@
+import React from 'react';
 import type { Preview } from '@storybook/react';
+import { Footer } from './Footer';
 import '../src/styles.css';
 
 const preview: Preview = {
@@ -23,6 +25,14 @@ const preview: Preview = {
       },
     },
   },
+  decorators: [
+    (Story) => (
+      <>
+        <Story />
+        <Footer />
+      </>
+    ),
+  ],
 };
 
 export default preview;
