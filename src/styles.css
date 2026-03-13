@@ -1,0 +1,361 @@
+.yk-flowchart {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.yk-flowchart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #3f3f46;
+  background-color: #18181b;
+}
+
+.yk-flowchart-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.yk-flowchart-select {
+  width: 180px;
+  padding: 6px 12px;
+  padding-right: 28px;
+  font-size: 14px;
+  color: #fafafa;
+  background-color: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2371717a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+}
+
+.yk-flowchart-select:hover {
+  background-color: #3f3f46;
+}
+
+.yk-flowchart-select:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+.yk-flowchart-path-indicator {
+  position: absolute;
+  left: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.yk-flowchart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  font-size: 12px;
+  color: #a1a1aa;
+  background-color: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.yk-flowchart-btn:hover {
+  background-color: #3f3f46;
+  color: #fafafa;
+}
+
+.yk-flowchart-btn--active {
+  background-color: #10b981;
+  border-color: #10b981;
+  color: #fafafa;
+}
+
+.yk-flowchart-btn-group {
+  display: flex;
+  align-items: center;
+  background-color: #27272a;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.yk-flowchart-btn-group-item {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #a1a1aa;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.yk-flowchart-btn-group-item:hover {
+  background-color: #3f3f46;
+}
+
+.yk-flowchart-btn-group-item--active {
+  background-color: #10b981;
+  color: #fafafa;
+}
+
+.yk-flowchart-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #27272a;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.yk-flowchart-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #a1a1aa;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.yk-flowchart-zoom-btn:hover {
+  background-color: #3f3f46;
+}
+
+.yk-flowchart-zoom-input {
+  width: 64px;
+  font-size: 12px;
+  color: #a1a1aa;
+  text-align: center;
+  background: transparent;
+  border: none;
+  -moz-appearance: textfield;
+}
+
+.yk-flowchart-zoom-input::-webkit-outer-spin-button,
+.yk-flowchart-zoom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.yk-flowchart-zoom-input:focus {
+  outline: none;
+  color: #fafafa;
+}
+
+.yk-flowchart-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.yk-flowchart-icon-sm {
+  width: 12px;
+  height: 12px;
+}
+
+.yk-flowchart-canvas {
+  flex: 1;
+  overflow: hidden;
+  background-color: #09090b;
+  position: relative;
+}
+
+/* Drawer styles */
+.yk-flowchart-drawer {
+  position: fixed;
+  background-color: #27272a;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  transition: transform 0.3s ease;
+}
+
+.yk-flowchart-drawer--left {
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 320px;
+  border-right: 1px solid #3f3f46;
+  transform: translateX(-100%);
+}
+
+.yk-flowchart-drawer--left.yk-flowchart-drawer--open {
+  transform: translateX(0);
+}
+
+.yk-flowchart-drawer--right {
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 320px;
+  border-left: 1px solid #3f3f46;
+  transform: translateX(100%);
+}
+
+.yk-flowchart-drawer--right.yk-flowchart-drawer--open {
+  transform: translateX(0);
+}
+
+.yk-flowchart-drawer--top {
+  top: 0;
+  left: 0;
+  right: 0;
+  max-height: 50vh;
+  border-bottom: 1px solid #3f3f46;
+  transform: translateY(-100%);
+}
+
+.yk-flowchart-drawer--top.yk-flowchart-drawer--open {
+  transform: translateY(0);
+}
+
+.yk-flowchart-drawer--bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 50vh;
+  border-top: 1px solid #3f3f46;
+  transform: translateY(100%);
+}
+
+.yk-flowchart-drawer--bottom.yk-flowchart-drawer--open {
+  transform: translateY(0);
+}
+
+.yk-flowchart-drawer-content {
+  padding: 16px;
+  height: 100%;
+  overflow: auto;
+}
+
+.yk-flowchart-drawer-content--vertical {
+  display: flex;
+  flex-direction: column;
+}
+
+.yk-flowchart-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.yk-flowchart-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.yk-flowchart-drawer-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.yk-flowchart-drawer-name {
+  font-weight: 500;
+  color: #fafafa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yk-flowchart-drawer-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fafafa;
+  flex-shrink: 0;
+}
+
+.yk-flowchart-drawer-close {
+  color: #a1a1aa;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.yk-flowchart-drawer-close:hover {
+  color: #fafafa;
+}
+
+.yk-flowchart-drawer-body {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.yk-flowchart-drawer-body--vertical {
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.yk-flowchart-drawer-section {
+  flex: 1;
+}
+
+.yk-flowchart-drawer-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.yk-flowchart-drawer-section-label {
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+.yk-flowchart-copy-btn {
+  font-size: 12px;
+  padding: 4px 8px;
+  color: #fafafa;
+  background-color: #3f3f46;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.yk-flowchart-copy-btn:hover {
+  background-color: #52525b;
+}
+
+.yk-flowchart-code {
+  display: block;
+  padding: 8px;
+  background-color: #18181b;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  color: #34d399;
+  overflow-x: auto;
+}
+
+.yk-flowchart-code--wrap {
+  white-space: pre-wrap;
+}
+
+.yk-flowchart-step-count {
+  font-size: 14px;
+  color: #fafafa;
+}

@@ -1,0 +1,68 @@
+{
+  "name": "@yantrakit/flowchart-react",
+  "version": "0.1.0",
+  "description": "A React flowchart component with auto-layout, path detection, and Mermaid syntax support",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./styles": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-actions": "^8.6.14",
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/blocks": "^8.6.14",
+    "@storybook/react": "^8.6.18",
+    "@storybook/react-vite": "^8.6.18",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^9.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "storybook": "^8.6.18",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vite": "^6.4.1"
+  },
+  "keywords": [
+    "react",
+    "flowchart",
+    "diagram",
+    "mermaid",
+    "auto-layout",
+    "visualization",
+    "graph"
+  ],
+  "author": "Yantrakit Inc",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yantrakitinc/flowchart-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yantrakitinc/flowchart-react/issues"
+  },
+  "homepage": "https://github.com/yantrakitinc/flowchart-react#readme"
+}

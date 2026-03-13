@@ -1,0 +1,292 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Getting Started/Usage" />
+
+# @yantrakit/flowchart-react
+
+A React flowchart component with auto-layout, path detection, and interactive features.
+
+## Installation
+
+```bash
+npm install @yantrakit/flowchart-react
+# or
+pnpm add @yantrakit/flowchart-react
+# or
+yarn add @yantrakit/flowchart-react
+```
+
+## Basic Usage
+
+```tsx
+import { FlowChart } from '@yantrakit/flowchart-react';
+import '@yantrakit/flowchart-react/styles';
+
+const flow = {
+  id: 'my-flow',
+  name: 'My Flow',
+  nodes: [
+    { id: 'start', label: 'Start', type: 'start' },
+    { id: 'process', label: 'Process Data', type: 'action' },
+    { id: 'end', label: 'End', type: 'end' },
+  ],
+  edges: [
+    { from: 'start', to: 'process', type: 'happy' },
+    { from: 'process', to: 'end', type: 'happy' },
+  ],
+};
+
+function App() {
+  return (
+    <div style={{ height: '600px' }}>
+      <FlowChart flow={flow} />
+    </div>
+  );
+}
+```
+
+## Node Types
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Shape</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>start</code></td>
+      <td>Entry point</td>
+      <td>Ellipse (blue)</td>
+    </tr>
+    <tr>
+      <td><code>end</code></td>
+      <td>Exit point</td>
+      <td>Ellipse (green)</td>
+    </tr>
+    <tr>
+      <td><code>action</code></td>
+      <td>Regular action</td>
+      <td>Rectangle (gray)</td>
+    </tr>
+    <tr>
+      <td><code>decision</code></td>
+      <td>Decision point</td>
+      <td>Diamond (yellow)</td>
+    </tr>
+    <tr>
+      <td><code>error</code></td>
+      <td>Error state</td>
+      <td>Rectangle (red)</td>
+    </tr>
+    <tr>
+      <td><code>warning</code></td>
+      <td>Warning state</td>
+      <td>Rectangle (orange)</td>
+    </tr>
+    <tr>
+      <td><code>link</code></td>
+      <td>External link</td>
+      <td>Dashed rectangle (purple)</td>
+    </tr>
+  </tbody>
+</table>
+
+## Edge Types
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Color</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>happy</code></td>
+      <td style={{ color: '#22c55e' }}>Green</td>
+      <td>Success path</td>
+    </tr>
+    <tr>
+      <td><code>error</code></td>
+      <td style={{ color: '#ef4444' }}>Red</td>
+      <td>Error path</td>
+    </tr>
+    <tr>
+      <td><code>warning</code></td>
+      <td style={{ color: '#f59e0b' }}>Orange</td>
+      <td>Warning path</td>
+    </tr>
+    <tr>
+      <td><code>default</code></td>
+      <td style={{ color: '#71717a' }}>Gray</td>
+      <td>Neutral path</td>
+    </tr>
+  </tbody>
+</table>
+
+## Interactive Features
+
+### Handle Node Clicks
+
+```tsx
+function App() {
+  const handleNodeClick = (node) => {
+    console.log('Clicked:', node.id, node.label);
+  };
+
+  return (
+    <FlowChart
+      flow={flow}
+      onNodeClick={handleNodeClick}
+    />
+  );
+}
+```
+
+### Path Selection
+
+```tsx
+import { useState } from 'react';
+
+function App() {
+  const [selectedPathId, setSelectedPathId] = useState(null);
+
+  return (
+    <FlowChart
+      flow={flow}
+      selectedPathId={selectedPathId}
+      onPathChange={setSelectedPathId}
+    />
+  );
+}
+```
+
+### Active Node Highlighting
+
+```tsx
+function App() {
+  const [activeNodeId, setActiveNodeId] = useState('process');
+
+  return (
+    <FlowChart
+      flow={flow}
+      activeNodeId={activeNodeId}
+      onNodeClick={(node) => setActiveNodeId(node.id)}
+    />
+  );
+}
+```
+
+## Layout Configuration
+
+```tsx
+<FlowChart
+  flow={flow}
+  config={{
+    nodeWidth: 200,          // Default: 180
+    nodeHeight: 80,          // Default: 60
+    horizontalSpacing: 200,  // Default: 150
+    verticalSpacing: 150,    // Default: 100
+    padding: 150,            // Default: 100
+  }}
+/>
+```
+
+## Path Drawer Position
+
+```tsx
+<FlowChart
+  flow={flow}
+  pathDrawerPosition="left"  // 'top' | 'bottom' | 'left' | 'right'
+/>
+```
+
+## Using the usePaths Hook
+
+```tsx
+import { usePaths } from '@yantrakit/flowchart-react';
+
+function PathList({ flow }) {
+  const { paths, selectedPathId, setSelectedPathId } = usePaths(flow);
+
+  return (
+    <ul>
+      {paths.map((path) => (
+        <li
+          key={path.id}
+          onClick={() => setSelectedPathId(path.id)}
+          style={{ fontWeight: selectedPathId === path.id ? 'bold' : 'normal' }}
+        >
+          {path.name} ({path.type})
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## TypeScript Types
+
+```tsx
+import type {
+  iFlowDefinition,
+  iFlowNode,
+  iFlowEdge,
+  iNodeType,
+  iEdgeType,
+  iLayoutConfig,
+  iFlowChartProps,
+  iFlowPath,
+  iPathType,
+} from '@yantrakit/flowchart-react';
+```
+
+## Full Example
+
+```tsx
+import { useState } from 'react';
+import { FlowChart } from '@yantrakit/flowchart-react';
+import '@yantrakit/flowchart-react/styles';
+
+const registrationFlow = {
+  id: 'registration',
+  name: 'User Registration',
+  nodes: [
+    { id: 'start', label: 'Start', type: 'start' },
+    { id: 'input', label: 'Enter Details', type: 'action' },
+    { id: 'validate', label: 'Valid?', type: 'decision' },
+    { id: 'create', label: 'Create User', type: 'action' },
+    { id: 'error', label: 'Show Errors', type: 'warning' },
+    { id: 'success', label: 'Success', type: 'end' },
+  ],
+  edges: [
+    { from: 'start', to: 'input' },
+    { from: 'input', to: 'validate' },
+    { from: 'validate', to: 'create', type: 'happy', label: 'Yes' },
+    { from: 'validate', to: 'error', type: 'warning', label: 'No' },
+    { from: 'error', to: 'input', type: 'warning' },
+    { from: 'create', to: 'success', type: 'happy' },
+  ],
+};
+
+function App() {
+  const [selectedPathId, setSelectedPathId] = useState(null);
+  const [activeNodeId, setActiveNodeId] = useState();
+
+  return (
+    <div style={{ height: '100vh' }}>
+      <FlowChart
+        flow={registrationFlow}
+        selectedPathId={selectedPathId}
+        onPathChange={setSelectedPathId}
+        activeNodeId={activeNodeId}
+        onNodeClick={(node) => setActiveNodeId(node.id)}
+      />
+    </div>
+  );
+}
+```
