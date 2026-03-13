@@ -2,6 +2,8 @@
 
 A React flowchart component with automatic node layout, path detection, and interactive controls.
 
+**[View Documentation & Examples →](https://yantrakit.com/flowchart-react)**
+
 ## Installation
 
 ```bash
@@ -65,8 +67,10 @@ function App() {
 
 ## Documentation
 
-View the full documentation and examples at [yantrakit.com/flowchart-react](https://yantrakit.com/flowchart-react)
+For full documentation, interactive examples, and API reference, visit:
+
+**[yantrakit.com/flowchart-react](https://yantrakit.com/flowchart-react)**
 
 ## License
 
-MIT
+MIT © [Yantrakit Inc](https://yantrakit.com)
