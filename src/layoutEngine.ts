@@ -81,7 +81,7 @@ export function calculateLayout(
     levelGroups.get(info.level)!.push(id);
   });
 
-  levelGroups.forEach((nodeIds, level) => {
+  levelGroups.forEach((nodeIds, _level) => {
     const sorted = sortNodesAtLevel(nodeIds, nodeMap, flow.edges);
     sorted.forEach((id, index) => {
       const info = nodeMap.get(id)!;
@@ -152,9 +152,6 @@ function sortNodesAtLevel(
   };
 
   return nodeIds.sort((a, b) => {
-    const infoA = nodeMap.get(a)!;
-    const infoB = nodeMap.get(b)!;
-
     const edgeA = edges.find((e) => e.to === a);
     const edgeB = edges.find((e) => e.to === b);
 

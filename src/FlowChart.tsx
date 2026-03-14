@@ -405,9 +405,9 @@ export function FlowChart({
   };
 
   return (
-    <div className={`yk-flowchart ${className}`}>
+    <div className={`yk-flowchart ${className}`} data-testid="flowchart-container">
       {/* Toolbar */}
-      <div className="yk-flowchart-toolbar">
+      <div className="yk-flowchart-toolbar" data-testid="flowchart-toolbar">
         {/* Path Selection */}
         {paths.length > 0 && onPathChange && (
           <div className="yk-flowchart-select-wrapper">
@@ -415,6 +415,7 @@ export function FlowChart({
               value={selectedPathId || 'all'}
               onChange={(e) => onPathChange(e.target.value === 'all' ? null : e.target.value)}
               className="yk-flowchart-select"
+              data-testid="path-selector"
             >
               <option value="all">All Paths</option>
               {paths.map((path) => (
@@ -451,6 +452,7 @@ export function FlowChart({
             onClick={() => setScrollMode('move')}
             className={`yk-flowchart-btn-group-item ${scrollMode === 'move' ? 'yk-flowchart-btn-group-item--active' : ''}`}
             title="Scroll to pan"
+            data-testid="scroll-mode-move"
           >
             Move
           </button>
@@ -458,14 +460,15 @@ export function FlowChart({
             onClick={() => setScrollMode('zoom')}
             className={`yk-flowchart-btn-group-item ${scrollMode === 'zoom' ? 'yk-flowchart-btn-group-item--active' : ''}`}
             title="Scroll to zoom"
+            data-testid="scroll-mode-zoom"
           >
             Zoom
           </button>
         </div>
 
         {/* Zoom Controls */}
-        <div className="yk-flowchart-zoom-controls">
-          <button onClick={handleZoomOut} className="yk-flowchart-zoom-btn">
+        <div className="yk-flowchart-zoom-controls" data-testid="zoom-controls">
+          <button onClick={handleZoomOut} className="yk-flowchart-zoom-btn" data-testid="zoom-out-btn">
             <svg className="yk-flowchart-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
             </svg>
@@ -482,13 +485,14 @@ export function FlowChart({
             className="yk-flowchart-zoom-input"
             min="10"
             max="10000"
+            data-testid="zoom-input"
           />
-          <button onClick={handleZoomIn} className="yk-flowchart-zoom-btn">
+          <button onClick={handleZoomIn} className="yk-flowchart-zoom-btn" data-testid="zoom-in-btn">
             <svg className="yk-flowchart-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
           </button>
-          <button onClick={handleZoomReset} className="yk-flowchart-zoom-btn">
+          <button onClick={handleZoomReset} className="yk-flowchart-zoom-btn" data-testid="zoom-reset-btn">
             <svg className="yk-flowchart-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -509,6 +513,7 @@ export function FlowChart({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ cursor: isPanning ? 'grabbing' : 'grab', touchAction: 'none' }}
+        data-testid="flowchart-canvas"
       >
         <svg
           width="100%"
@@ -518,6 +523,7 @@ export function FlowChart({
             transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
             transformOrigin: 'center center',
           }}
+          data-testid="flowchart-svg"
         >
           {/* Arrow marker definitions */}
           <defs>
@@ -555,7 +561,7 @@ export function FlowChart({
       </div>
 
       {/* Path Text Drawer */}
-      <div className={getDrawerClasses()}>
+      <div className={getDrawerClasses()} data-testid="path-drawer">
         <div className={`yk-flowchart-drawer-content ${isDrawerVertical ? 'yk-flowchart-drawer-content--vertical' : ''}`}>
           <div className="yk-flowchart-drawer-header">
             <div className="yk-flowchart-drawer-title">

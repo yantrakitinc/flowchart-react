@@ -227,7 +227,7 @@ export const WithPathSelection: Story = {
     return (
       <FlowChart
         flow={complexFlow}
-        selectedPathId={selectedPathId}
+        selectedPathId={selectedPathId ?? undefined}
         onPathChange={handlePathChange}
         onNodeClick={onNodeClickAction}
       />
@@ -273,7 +273,7 @@ export const InteractiveDemo: Story = {
     return (
       <FlowChart
         flow={paymentFlow}
-        selectedPathId={selectedPathId}
+        selectedPathId={selectedPathId ?? undefined}
         onPathChange={handlePathChange}
         activeNodeId={activeNodeId}
         onNodeClick={handleNodeClick}
@@ -294,7 +294,7 @@ export const DrawerPositionTop: Story = {
     return (
       <FlowChart
         flow={decisionFlow}
-        selectedPathId={selectedPathId}
+        selectedPathId={selectedPathId ?? undefined}
         onPathChange={handlePathChange}
         onNodeClick={onNodeClickAction}
         pathDrawerPosition="top"
@@ -315,7 +315,7 @@ export const DrawerPositionBottom: Story = {
     return (
       <FlowChart
         flow={decisionFlow}
-        selectedPathId={selectedPathId}
+        selectedPathId={selectedPathId ?? undefined}
         onPathChange={handlePathChange}
         onNodeClick={onNodeClickAction}
         pathDrawerPosition="bottom"
@@ -336,7 +336,7 @@ export const DrawerPositionLeft: Story = {
     return (
       <FlowChart
         flow={decisionFlow}
-        selectedPathId={selectedPathId}
+        selectedPathId={selectedPathId ?? undefined}
         onPathChange={handlePathChange}
         onNodeClick={onNodeClickAction}
         pathDrawerPosition="left"
