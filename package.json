@@ -24,7 +24,7 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm build",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build -o storybook-static"
+    "build-storybook": "STORYBOOK_BASE_URL=/flowchart-react/ storybook build -o storybook-static"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

@@ -14,6 +14,10 @@ const config: StorybookConfig = {
     config.base = '/flowchart-react/';
     return config;
   },
+  managerHead: (head) => `
+    ${head}
+    <base href="/flowchart-react/">
+  `,
 };
 
 export default config;
