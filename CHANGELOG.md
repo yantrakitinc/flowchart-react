@@ -4,6 +4,18 @@ All notable changes to this project will be documented here.
 
 ---
 
+## [1.1.4] - 2026-03-14
+
+### Added
+
+- **Touch Support** - Full mobile/tablet support with pointer events for panning and pinch-to-zoom gestures
+
+### Fixed
+
+- **Storybook Base Path** - Fixed local development by conditionally applying base path only for production builds
+
+---
+
 ## [1.1.3] - 2026-03-14
 
 ### Added

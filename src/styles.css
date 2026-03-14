@@ -172,6 +172,7 @@
   overflow: hidden;
   background-color: #09090b;
   position: relative;
+  touch-action: none;
 }
 
 /* Drawer styles */

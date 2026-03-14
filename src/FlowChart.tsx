@@ -22,6 +22,8 @@ export function FlowChart({
   const [scrollMode, setScrollMode] = useState<'zoom' | 'move'>('zoom');
   const [showPathText, setShowPathText] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
+  const [capturedPointerId, setCapturedPointerId] = useState<number | null>(null);
 
   const { nodes, width, height } = useMemo(
     () => calculateLayout(flow, config),
@@ -83,7 +85,6 @@ export function FlowChart({
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
     if (scrollMode === 'zoom') {
       setZoom((z) => {
         if (e.deltaY < 0) return Math.min(z + 0.1, 100);
@@ -97,20 +98,60 @@ export function FlowChart({
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button === 0 && !e.defaultPrevented) {
+      const target = e.target as HTMLElement;
+      target.setPointerCapture(e.pointerId);
+      setCapturedPointerId(e.pointerId);
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (isPanning) {
       setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
     }
   };
 
-  const handleMouseUp = () => setIsPanning(false);
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (capturedPointerId !== null) {
+      try {
+        (e.target as HTMLElement).releasePointerCapture(capturedPointerId);
+      } catch {
+        // Pointer may have already been released
+      }
+      setCapturedPointerId(null);
+    }
+    setIsPanning(false);
+  };
+
+  const getTouchDistance = (touches: React.TouchList): number => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      setLastTouchDistance(getTouchDistance(e.touches));
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastTouchDistance !== null) {
+      e.preventDefault();
+      const newDistance = getTouchDistance(e.touches);
+      const scale = newDistance / lastTouchDistance;
+      setZoom((z) => Math.max(0.1, Math.min(100, z * scale)));
+      setLastTouchDistance(newDistance);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setLastTouchDistance(null);
+  };
 
   const renderEdge = (edge: iFlowEdge, idx: number) => {
     const fromNode = nodeMap.get(edge.from);
@@ -459,11 +500,15 @@ export function FlowChart({
       <div
         className="yk-flowchart-canvas"
         onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ cursor: isPanning ? 'grabbing' : 'grab', touchAction: 'none' }}
       >
         <svg
           width="100%"
