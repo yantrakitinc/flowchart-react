@@ -1,6 +1,6 @@
 {
   "name": "@yantrakit/flowchart-react",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "A React flowchart component with auto-layout, path detection, and Mermaid syntax support",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

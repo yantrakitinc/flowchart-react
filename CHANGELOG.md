@@ -4,6 +4,14 @@ All notable changes to this project will be documented here.
 
 ---
 
+## [1.1.5] - 2026-03-14
+
+### Fixed
+
+- **README** - Removed incorrect GitHub Project link
+
+---
+
 ## [1.1.4] - 2026-03-14
 
 ### Added

@@ -4,8 +4,6 @@ A React flowchart component with automatic node layout, path detection, and inte
 
 **GitHub Repo:** https://github.com/yantrakitinc/flowchart-react
 
-**GitHub Project:** https://github.com/users/yantrakitinc/projects/1/views/1
-
 **[View Documentation & Examples →](https://yantrakit.com/flowchart-react)**
 
 ## Installation
