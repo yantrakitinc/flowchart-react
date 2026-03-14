@@ -141,6 +141,21 @@ export function FlowChart({
     const midX = (fromNode.x + toNode.x) / 2;
     const midY = (fromNode.y + toNode.y) / 2;
 
+    // Calculate angle for arrow rotation
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+    // Effective line length after offsets
+    const lineLength = length - offsetStart - offsetEnd;
+
+    // Positions for smaller arrows (just behind the main arrow)
+    const arrow1X = endX - (dx / length) * 45;
+    const arrow1Y = endY - (dy / length) * 45;
+    const arrow2X = endX - (dx / length) * 35;
+    const arrow2Y = endY - (dy / length) * 35;
+
+    // Only show trailing arrows if line is long enough
+    const showTrailingArrows = lineLength > 60;
+
     return (
       <g key={`edge-${idx}`} opacity={opacity}>
         <line
@@ -152,6 +167,23 @@ export function FlowChart({
           strokeWidth={isActive ? 3 : 2}
           markerEnd={`url(#arrowhead-${markerType})`}
         />
+        {/* Smaller faded arrows along the line */}
+        {showTrailingArrows && (
+          <>
+            <polygon
+              points="-4,-3 4,0 -4,3"
+              fill={strokeColor}
+              opacity={0.3}
+              transform={`translate(${arrow1X}, ${arrow1Y}) rotate(${angle})`}
+            />
+            <polygon
+              points="-5,-4 5,0 -5,4"
+              fill={strokeColor}
+              opacity={0.5}
+              transform={`translate(${arrow2X}, ${arrow2Y}) rotate(${angle})`}
+            />
+          </>
+        )}
         {edge.label && (
           <g>
             <rect
@@ -450,7 +482,7 @@ export function FlowChart({
                 id={`arrowhead-${type}`}
                 markerWidth="12"
                 markerHeight="10"
-                refX="10"
+                refX="30"
                 refY="5"
                 orient="auto"
                 markerUnits="userSpaceOnUse"

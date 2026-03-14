@@ -95,6 +95,60 @@ const complexFlow: iFlowDefinition = {
   ],
 };
 
+const loginFlow: iFlowDefinition = {
+  id: 'login-flow',
+  name: 'User Login',
+  nodes: [
+    { id: 'A', label: 'Start', type: 'start' },
+    { id: 'B', label: 'User visits login page', type: 'action' },
+    { id: 'C', label: 'Login method?', type: 'decision' },
+    { id: 'D', label: 'Enter credentials', type: 'action' },
+    { id: 'E', label: 'Valid credentials?', type: 'decision' },
+    { id: 'F', label: 'Show error message', type: 'error' },
+    { id: 'G', label: 'Check email verified?', type: 'decision' },
+    { id: 'H', label: 'Redirect to provider', type: 'action' },
+    { id: 'I', label: 'User authorizes', type: 'action' },
+    { id: 'J', label: 'Authorization successful?', type: 'decision' },
+    { id: 'K', label: 'Show error, return to login', type: 'error' },
+    { id: 'L', label: 'Get user profile from provider', type: 'action' },
+    { id: 'M', label: 'Send verification email', type: 'action' },
+    { id: 'N', label: 'Show verification required message', type: 'action' },
+    { id: 'O', label: 'End - Awaiting verification', type: 'end' },
+    { id: 'P', label: 'Create session', type: 'action' },
+    { id: 'Q', label: 'User exists?', type: 'decision' },
+    { id: 'R', label: 'Create user account', type: 'action' },
+    { id: 'S', label: 'Set auth cookies', type: 'action' },
+    { id: 'T', label: 'Redirect to dashboard', type: 'action' },
+    { id: 'U', label: 'End - Logged in', type: 'end' },
+  ],
+  edges: [
+    { from: 'A', to: 'B', type: 'default' },
+    { from: 'B', to: 'C', type: 'default' },
+    { from: 'C', to: 'D', type: 'default', label: 'Email/Pass' },
+    { from: 'D', to: 'E', type: 'default' },
+    { from: 'E', to: 'F', type: 'error', label: 'No' },
+    { from: 'F', to: 'D', type: 'error' },
+    { from: 'E', to: 'G', type: 'happy', label: 'Yes' },
+    { from: 'C', to: 'H', type: 'default', label: 'Social' },
+    { from: 'H', to: 'I', type: 'default' },
+    { from: 'I', to: 'J', type: 'default' },
+    { from: 'J', to: 'K', type: 'error', label: 'No' },
+    { from: 'K', to: 'B', type: 'error' },
+    { from: 'J', to: 'L', type: 'happy', label: 'Yes' },
+    { from: 'G', to: 'M', type: 'warning', label: 'No' },
+    { from: 'M', to: 'N', type: 'default' },
+    { from: 'N', to: 'O', type: 'default' },
+    { from: 'G', to: 'P', type: 'happy', label: 'Yes' },
+    { from: 'L', to: 'Q', type: 'default' },
+    { from: 'Q', to: 'R', type: 'default', label: 'No' },
+    { from: 'R', to: 'P', type: 'default' },
+    { from: 'Q', to: 'P', type: 'happy', label: 'Yes' },
+    { from: 'P', to: 'S', type: 'happy' },
+    { from: 'S', to: 'T', type: 'happy' },
+    { from: 'T', to: 'U', type: 'happy' },
+  ],
+};
+
 const paymentFlow: iFlowDefinition = {
   id: 'payment-flow',
   name: 'Payment Processing',
@@ -149,6 +203,12 @@ export const Complex: Story = {
 export const PaymentProcess: Story = {
   args: {
     flow: paymentFlow,
+  },
+};
+
+export const UserLogin: Story = {
+  args: {
+    flow: loginFlow,
   },
 };
 

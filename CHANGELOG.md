@@ -1,7 +1,3 @@
-import { Meta } from '@storybook/blocks';
-
-<Meta title="Getting Started/Changelog" />
-
 # Changelog
 
 All notable changes to this project will be documented here.
@@ -60,12 +56,3 @@ All notable changes to this project will be documented here.
 - ESM and CommonJS builds
 - Tree-shakeable exports
 - Source maps included
-
----
-
-<div style={{ marginTop: '60px', padding: '20px', borderTop: '1px solid #3f3f46', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '14px', color: '#a1a1aa' }}>
-  <a href="https://www.npmjs.com/package/@yantrakit/flowchart-react" target="_blank" style={{ color: '#cb3837', textDecoration: 'none', fontWeight: 500 }}>npm</a>
-  <span style={{ color: '#52525b' }}>•</span>
-  <span>Part of</span>
-  <a href="https://yantrakit.com" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 500 }}>Yantrakit</a>
-</div>
