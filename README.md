@@ -1,5 +1,15 @@
 # @yantrakit/flowchart-react
 
+## GitHub Identity
+
+This repository is owned by the **`yantrakitinc`** GitHub account. All `git` and `gh` operations on this repo must use the `yantrakitinc` identity, not personal accounts.
+
+```bash
+gh auth switch -u yantrakitinc -h github.com
+git config user.name yantrakitinc
+git config user.email yantrakitinc@gmail.com
+```
+
 A React flowchart component with automatic node layout, path detection, and interactive controls.
 
 **GitHub Repo:** https://github.com/yantrakitinc/flowchart-react
