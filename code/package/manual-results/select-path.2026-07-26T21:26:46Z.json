@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "flow": "select-path",
+  "nonce": "d90ad645251dd12c35",
+  "walkedAt": "2026-07-26T21:26:46Z",
+  "ok": true,
+  "observed": [
+    {
+      "step": 1,
+      "action": "confirm path drawer with >=2 items, none selected",
+      "observed": "3 items found: fc-path-path-0/1/2, all aria-pressed='false'",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "click first path item (Path 1)",
+      "observed": "fc-path-path-0 aria-pressed became 'true'; canvas dimmed the off-path 'Manual review' node while on-path nodes (Order placed/Review cart/Payment OK) stayed full opacity",
+      "verdict": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "click same path item again (deselect)",
+      "observed": "all 3 items aria-pressed='false'; all 7 node opacities returned to '1' (no lingering dim)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "click Path 2 then immediately click Path 3",
+      "observed": "final state: fc-path-path-2 aria-pressed='true', fc-path-path-0 and fc-path-path-1 both 'false' — only the last-clicked item ended selected",
+      "verdict": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "set selectedPathId control to 'path-does-not-exist'",
+      "observed": "no crash/blank screen; canvas rendered normally; all path items aria-pressed='false'; all node opacities '1' (clean fallback to nothing-selected)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "select Path 1 via real click, then edit chart control to a different valid diagram (Zulu/Yankee nodes) while selected",
+      "observed": "fc-path-path-0 remained aria-pressed='true'; new diagram's own nodes (fc-node-zulu, fc-node-yankee) carried class 'fc-node--on-path' consistently (both, since the new 2-node diagram's only path covers both nodes) — no stale reference to the old diagram's removed node ids, no thrown error",
+      "verdict": "PASS"
+    }
+  ],
+  "walker": "ui-walker",
+  "signature": "c778bfcac07bbf1ebd1f0c45b667a6c073e9095210979ee7a7e58a31fb4d8e19"
+}

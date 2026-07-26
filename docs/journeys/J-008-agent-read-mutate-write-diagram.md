@@ -44,7 +44,9 @@ provenance:
     - "React Flow's imperative nodes/edges mutation API consumed by external automation/tooling layers"
     - "Chat-agent operability conventions for machine-actionable data mutation (read -> mutate -> validate -> write)"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/parse/__specs__/flows/parse-flowchart.flow.md"
+  - "src/parse/__specs__/flows/serialize-flowchart.flow.md"
 ---
 
 # J-008: An agent programmatically reads, mutates, and writes back a diagram

@@ -39,7 +39,10 @@ provenance:
   inspired_by:
     - "React Flow's generic Node<T>/Edge<T> TypeScript types (reactflow.dev/learn/advanced-use/typescript)"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/ir/__specs__/flows/isNodeType.flow.md"
+  - "src/ir/__specs__/flows/isEdgeType.flow.md"
+  - "src/ir/__specs__/flows/isDirection.flow.md"
 ---
 
 # J-021: Get strict TypeScript types for custom node/edge data

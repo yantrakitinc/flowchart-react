@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yantrakit.com/schema/flow-graph.schema.json",
+  "title": "FlowGraph",
+  "description": "Renderer-agnostic flow graph consumed by @yantrakit/flowchart-react.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "direction", "nodes", "edges"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "direction": { "type": "string", "enum": ["TD", "BT", "LR", "RL"] },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "type"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["start", "end", "action", "decision", "error", "warning", "link"]
+          },
+          "description": { "type": "string" },
+          "data": { "type": "object" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "from", "to", "type"],
+        "properties": {
+          "id": { "type": "string" },
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "type": { "type": "string", "enum": ["happy", "warning", "error", "default"] },
+          "label": { "type": "string" }
+        }
+      }
+    }
+  }
+}

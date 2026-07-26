@@ -1,0 +1,11 @@
+{
+  "name": "claude-standards-verifiers",
+  "private": true,
+  "description": "Verifier gates + their node:test selftest net. Run: npm test.",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 scripts/selftest/*.test.mjs"
+  },
+  "devDependencies": {
+    "yaml": "^2"
+  }
+}

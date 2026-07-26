@@ -36,7 +36,8 @@ provenance:
     - "React Flow's Controls / MiniMap / Background built-in chrome (reactflow.dev/examples/overview)"
     - "Canvas-tool pan/zoom/minimap navigation conventions common to large graph visualizers"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/react/__specs__/flows/render-flowchart.flow.md"
 ---
 
 # J-015: Pan, zoom, and use a minimap to navigate a large diagram

@@ -40,7 +40,9 @@ provenance:
     - "Mermaid's mermaid.parse()/suppressErrors validation entry point (mermaid-js/mermaid error-handling docs)"
     - "Mermaid parse-error issue threads showing the expected shape of an actionable syntax error (github.com/mermaid-js/mermaid/issues/937)"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/parse/__specs__/flows/parse-flowchart.flow.md"
+  - "src/react/__specs__/flows/render-flowchart.flow.md"
 ---
 
 # J-009: Validate/parse a diagram and surface errors

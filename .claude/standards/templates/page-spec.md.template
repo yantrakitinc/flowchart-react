@@ -1,0 +1,244 @@
+# `<PageName>` page spec
+
+The fenced ```yaml block below is the machine source of truth — the loader and
+`verify-component.mjs --check page-landmarks` + `--check page-state-machine` read
+it. Author this ONE file as `<surface-folder>/__specs__/spec.md`.
+
+## Concept
+
+<One paragraph: what this page/surface is, its audience, and the role it plays.
+THIN-SPEC DOCTRINE — cite composites + atomics; do not restate their concerns.>
+
+```yaml
+# page spec — machine-readable contract for a tier-3 page/surface.
+# Author as <surface-folder>/__specs__/spec.md (fenced block) or legacy spec.yaml.
+#   route:     src/app/<route>/__specs__/spec.md
+#   sidepanel: packages/extension/src/sidepanel/<name>/__specs__/spec.md
+#   popup:     packages/extension/src/popup/<name>/__specs__/spec.md
+#   options:   packages/extension/src/options/<name>/__specs__/spec.md
+#   embedded:  src/features/<feature>/components/<Surface>/__specs__/spec.md
+# Schema enforced by verify-component.mjs --check page-landmarks + verify-component.mjs --check page-state-machine.
+
+spec_version: 1
+page: <PageName>
+tier: page
+package: <package-name>
+folder: <repo-relative-path>
+status: draft
+stakes: <internal | standard | brand>
+surface_type: <route | sidepanel | popup | options | embedded>
+
+# ---------- public route or surface ----------
+
+public_route_or_surface:
+  url_or_surface_id: <e.g. /scan | sidepanel:scan-tab | popup:default>
+  http_status: <200 | n/a — non-route>
+  audience: <public | internal | authenticated>
+
+# ---------- consumed composites ----------
+
+consumed_composites:
+  - path: <repo-relative-path-to-composite-folder>
+    package: <package-name>
+    version_pinned_to: latest-locked
+
+# ---------- consumed atomics (when no composite makes sense) ----------
+
+consumed_atomics:
+  - path: <repo-relative-path-to-atomic-folder>
+    package: <package-name>
+    version_pinned_to: latest-locked
+
+# ---------- layout grid (one entry per breakpoint declared in responsive_matrix) ----------
+
+layout_grid:
+  - breakpoint: mobile
+    columns: 1
+    gutters_px: 16
+    row_layout: <single column stack>
+  - breakpoint: tablet
+    columns: 2
+    gutters_px: 24
+    row_layout: <sidebar + content>
+  - breakpoint: desktop
+    columns: 12
+    gutters_px: 24
+    row_layout: <12-column grid; sidebar 3 + content 6 + aside 3>
+
+# ---------- responsive matrix ----------
+
+responsive_matrix:
+  - breakpoint: mobile
+    min_width_px: 0
+    max_width_px: 480
+    what_changes: <single column; bottom nav; sticky header>
+  - breakpoint: tablet
+    min_width_px: 481
+    max_width_px: 1024
+    what_changes: <sidebar drawer; condensed header>
+  - breakpoint: desktop
+    min_width_px: 1025
+    max_width_px: null
+    what_changes: <full 3-column layout; persistent sidebar>
+
+# ---------- landmark structure ----------
+
+landmark_structure:
+  - landmark_role: banner
+    element_tag: header
+    aria_label_or_labelledby: <text or "n/a — uses default banner role">
+    present_in_surface_types: [route, options]
+  - landmark_role: navigation
+    element_tag: nav
+    aria_label_or_labelledby: <text>
+    present_in_surface_types: [route]
+  - landmark_role: main
+    element_tag: main
+    aria_label_or_labelledby: <text>
+    present_in_surface_types: [route, sidepanel, popup, options]
+  - landmark_role: contentinfo
+    element_tag: footer
+    aria_label_or_labelledby: <text>
+    present_in_surface_types: [route]
+
+skip_link:
+  exists: <true | false>
+  text: <"Skip to main content" | other>
+  target_selector: <e.g. #main-content>
+
+# ---------- state machine ----------
+
+state_machine:
+  states:
+    - idle
+    - loading
+    - success
+    - empty
+    - error
+    - not_found
+  initial: idle
+  transitions:
+    - from: idle
+      to: loading
+      trigger: <user navigates to route | sidepanel mount | etc.>
+    - from: loading
+      to: success
+      trigger: <data fetch resolved with data>
+    - from: loading
+      to: empty
+      trigger: <data fetch resolved with no data>
+    - from: loading
+      to: error
+      trigger: <data fetch rejected>
+    - from: success
+      to: idle
+      trigger: <user navigates away>
+  url_state:
+    reflected_in_url: <list of state attributes encoded in URL — e.g. ?tab=scan&filter=open>
+    state_param: <query param name>
+    deep_linkable_states: <list of state names that are deep-linkable>
+
+# ---------- focus orchestration on transitions ----------
+
+focus_orchestration_on_transitions:
+  - from_state: idle
+    to_state: success
+    focus_target: <selector or "first interactive element in main">
+  - from_state: any
+    to_state: error
+    focus_target: <selector for error message>
+
+# ---------- SEO contract (required when surface_type=route; n/a otherwise) ----------
+
+seo_contract:
+  title: <"<page title>">
+  description: <"<meta description>">
+  robots: <"index, follow" | "noindex, nofollow">
+  og_image: <path | "site default">
+  structured_data: <list of JSON-LD schemas to emit | "none">
+  in_sitemap: <true | false>
+
+# ---------- analytics events ----------
+
+analytics_events:
+  - event_name: page_view
+    fires_when: <surface mounts AND data fetch completes>
+    payload_schema: { surface_id, audience, locale, referrer }
+  - event_name: <custom event>
+    fires_when: <condition>
+    payload_schema: { ... }
+
+# ---------- i18n keys ----------
+
+i18n_keys:
+  - key: <namespace.key>
+    default_text: <"<text>">
+    pluralization: <"none" | "icu-plural-rules" | "custom">
+    rtl_handling: <symmetric | mirrored | special-case>
+
+# ---------- performance budget (required when surface_type=route; reshaped for sidepanel/popup) ----------
+
+performance_budget:
+  lcp_ms: <e.g. 2500>
+  fcp_ms: <e.g. 1800>
+  cls: <e.g. 0.1>
+  hydration_budget_kb: <e.g. 100>
+  total_js_kb: <e.g. 250>
+  sidepanel_paint_to_interactive_ms: <e.g. 200>     # only when surface_type=sidepanel
+  popup_interaction_response_ms: <e.g. 100>          # only when surface_type=popup
+
+# ---------- error / loading / not-found surfaces ----------
+
+error_surface:
+  trigger_conditions: <list of conditions that route to error.tsx OR error state>
+  copy: <"<text>">
+  recovery_actions: <list of CTAs offered>
+
+loading_surface:
+  trigger_conditions: <data fetch in flight | route in transition>
+  copy: <"<text>">
+  indicator_type: <Spinner | Skeleton | ProgressBar | StateMessage>
+
+not_found_surface:
+  trigger_conditions: <route matched but resource missing>
+  copy: <"<text>">
+  recovery_actions: <list of CTAs>
+  required_when: surface_type == route
+
+# ---------- forced-colors / reduced-motion / RTL / print ----------
+
+forced_colors_handling: <inherited from globals.css OR custom>
+reduced_motion_handling: <inherited from globals.css OR custom>
+rtl_handling: <symmetric | mirrored | special-case>
+print_handling: <inherited from globals.css OR custom OR n/a — interactive surface>
+
+# ---------- edge cases ----------
+
+edge_cases:
+  - case: <e.g. "deep-link to non-default tab">
+    handling: <define>
+  - case: <e.g. "JS disabled">
+    handling: <define>
+
+# ---------- stories or manual substitute ----------
+
+stories_substituted_by_manual: <true | false>
+
+stories:
+  - id: Usage
+    intent: realistic page mount at success state
+    args: { ... }
+  - id: <StateName>
+    intent: page mounted at state <StateName>
+    args: { ... }
+
+# ---------- test coverage ----------
+
+test_coverage:
+  rule: <per-file 100/100/100/100 OR project-policy override per autonomy.yaml>
+  test_file: <path>/__tests__/<Page>.test.tsx
+  case_count: tbd at phase-2 close
+  scope_reminder: |
+    Test state-machine transitions + focus orchestration + landmarks + error/loading/not-found.
+    Do NOT re-test composite or atomic behavior — those tests live in their own folders.
+```

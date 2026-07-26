@@ -41,3 +41,22 @@ clean break v2.0.0, rich node registry, full-regime-from-scratch directive.
 ### Remaining pipeline
 Phase 2 issue + branch → Phase 3 journeys → Phase 4 specs → Phase 5 node design-locks →
 Phase 6 TDD implementation → Phase 7 verify + lock + PR.
+
+---
+
+## Session addendum — v2 rebuild under updated standards
+
+The two prior v2 attempts were discarded (the second was improperly force-merged to main and
+then nuked; main was restored to the v1 baseline keeping `docs/`). The user updated the global
+standards to fix the regime-infra blockers:
+- Vendored gate directories no longer ship self-lock compliance files → the ~134 phantom
+  `scripts/` compliance violations are gone (`verify-standards-compliance` → "0 feature(s)
+  locked + fresh" on the baseline).
+- `verify-eslint-permission-rules` (a Next.js+Postgres-only gate) removed from the chain.
+- Spec/lock artifacts moved `.yaml → .md` (`spec.md`, `flow.md`, `manual.md`,
+  `standards-compliance.md`).
+
+Rebuild pipeline (issue #4, branch `feat/0004-v2-mermaid-flowchart`): provision (done) →
+code (coder-core, in progress) → per-feature specs (backfill `.md`) → journeys reconcile →
+node-UI design locks → verifier Mode A + `pnpm verify` green → PR. Design is the ratified one
+in `docs/decisions/DECISIONS.yaml` (React Flow + pluggable dagre/ELK + Mermaid-like DSL).

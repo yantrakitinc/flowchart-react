@@ -40,7 +40,9 @@ provenance:
   inspired_by:
     - "React Flow's toObject()/viewport+nodes+edges state-snapshot convention for persistence"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/parse/__specs__/flows/serialize-flowchart.flow.md"
+  - "src/ir/__specs__/flows/isNodeType.flow.md"
 ---
 
 # J-012: Persist a diagram as JSON and reload it later

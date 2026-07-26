@@ -41,7 +41,10 @@ provenance:
     - "React Flow Custom Nodes examples (reactflow.dev/examples/nodes/custom-node)"
     - "React Flow's documented nodrag/nopan class convention for interactive children inside a node"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/react/__specs__/flows/click-node.flow.md"
+  - "src/react/nodes/__specs__/flows/flow-node.flow.md"
+  - "src/react/nodes/__specs__/flows/resolve-node-types.flow.md"
 ---
 
 # J-004: Make each node an interactive, clickable, customizable UI element

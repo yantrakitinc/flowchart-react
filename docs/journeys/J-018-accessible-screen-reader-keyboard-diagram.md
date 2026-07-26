@@ -40,7 +40,10 @@ provenance:
     - "WCAG 2.1.1 (Keyboard) and 4.1.2 (Name, Role, Value) success criteria as applied to canvas/graphics widgets (ARIA Authoring Practices Guide)"
     - "Accessibility scrutiny already applied to comparable interactive-graphics libraries (charting libs, drag-and-drop boards)"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/react/__specs__/flows/click-node.flow.md"
+  - "src/react/nodes/__specs__/flows/flow-node.flow.md"
+  - "src/react/__specs__/flows/playback-controls.flow.md"
 ---
 
 # J-018: Confirm the diagram is keyboard- and screen-reader-accessible

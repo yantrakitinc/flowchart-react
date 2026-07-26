@@ -39,7 +39,10 @@ provenance:
     - "React Flow's nodes/edges array data model (reactflow.dev/learn/concepts/building-a-flow)"
     - "@xyflow/react npm package convention of id/source/target as the minimal edge contract"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/react/__specs__/flows/render-flowchart.flow.md"
+  - "src/react/__specs__/flows/flow-chart.flow.md"
+  - "src/ir/__specs__/flows/isNodeType.flow.md"
 ---
 
 # J-002: Render a flowchart from a structured data object

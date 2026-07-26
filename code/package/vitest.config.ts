@@ -14,8 +14,17 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         'src/**/*.stories.{ts,tsx}',
         'src/test/**',
-        'src/index.ts',
+        'src/**/index.ts',
+        'src/layout/types.ts',
+        'src/react/types.ts',
       ],
+      thresholds: {
+        perFile: true,
+        statements: 100,
+        branches: 100,
+        functions: 100,
+        lines: 100,
+      },
     },
   },
 });

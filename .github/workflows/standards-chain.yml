@@ -1,0 +1,33 @@
+# .github/workflows/standards-chain.yml — the unforgeable wall.
+# Re-runs the FULL standards chain server-side on every PR; branch protection
+# marks this check required, so no local bypass (--no-verify, forged receipts)
+# can reach main. Installed by install-slice-gates.sh; WEB_SUBDIR baked in.
+name: standards-chain
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  standards-chain:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: code/package
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: code/package/pnpm-lock.yaml
+      - name: gates need strict YAML parsing
+        run: pip3 install --quiet pyyaml
+      - run: pnpm install --frozen-lockfile
+      - name: full verify chain (typecheck + lint + gates, receipt last)
+        run: pnpm verify
+      - name: coverage (100 perFile enforced)
+        run: pnpm test:coverage
+      - name: e2e over real transport
+        run: pnpm e2e

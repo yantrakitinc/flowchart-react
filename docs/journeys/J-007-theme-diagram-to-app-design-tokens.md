@@ -45,7 +45,9 @@ provenance:
     - "React Flow's colorMode prop + CSS-variable theming (reactflow.dev/learn/customization/theming, /examples/styling/dark-mode)"
     - "General design-token/CSS-variable dark-mode conventions (single-selector theme flip)"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/react/__specs__/flows/render-flowchart.flow.md"
+  - "src/react/edges/__specs__/flows/to-react-flow-edge.flow.md"
 ---
 
 # J-007: Theme the diagram to match an app's design tokens

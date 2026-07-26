@@ -46,7 +46,8 @@ provenance:
     - "JSON-first LLM diagramming pattern - have the model emit structured JSON, then convert to diagram syntax programmatically, rather than asking it to emit fragile DSL text directly (smcleod.net, matt-adams.co.uk structured-data-generation writeups)"
     - "LangChain StructuredOutputParser + Zod schema pattern for constraining LLM diagram output"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/parse/__specs__/flows/parse-flowchart.flow.md"
 ---
 
 # J-022: An LLM/agent generates a diagram from a natural-language description

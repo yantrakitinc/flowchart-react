@@ -1,0 +1,9 @@
+# Empty marker (SOURCE_COVERAGE.md / SPEC_CONTRACT.rationale.md): this folder
+# is deliberately exempt from feature-spec ownership — true cross-cutting
+# repo scaffolding with no single owning feature.
+#
+# Covers (closest-marker-wins; every subfolder below src/ carries its own
+# nearer __specs__/spec.md and is unaffected by this blanket marker):
+#   - src/index.ts            — package-root barrel re-exporting every feature
+#   - src/FlowChart.stories.tsx — Storybook stories, not a feature source file
+#   - src/test/setup.ts       — Vitest global test-environment setup

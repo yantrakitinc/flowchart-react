@@ -1,0 +1,64 @@
+#!/usr/bin/env sh
+# .husky/pre-commit — design-system component gates.
+#
+# @updated 2026-06-05
+#
+# Copy this to <project>/.husky/pre-commit on bootstrap. Make it executable:
+#   chmod +x .husky/pre-commit
+#
+# Runs the COMPONENT_CREATION verifiers against the project's component roots.
+# Components are discovered path-agnostically (components/ui, generic components/,
+# and feature-located <feature>/components/) by the shared _discover-components.mjs
+# helper. Bypass with --no-verify is FORBIDDEN per CLAUDE.md; fix the violation.
+#
+# Planning-status repos skip Gate 2 (see the README.yaml check below), per the
+# CLAUDE.md planning regime — the gate re-engages when status flips to shipping.
+#
+# The verifiers live at ~/.claude/standards/scripts/verify/ on the dev machine.
+# On CI, the same scripts must be available (vendor them or use a setup step).
+# A project that vendors standards/scripts/verify/ MUST include _discover-components.mjs.
+
+set -e
+
+# Detect the src root in this project (override with COMPONENT_SRC_ROOT env var).
+SRC_ROOT="${COMPONENT_SRC_ROOT:-}"
+if [ -z "$SRC_ROOT" ]; then
+  for candidate in "src" "packages/extension/src" "packages/*/src" "code/web/src" "code/packages/*/src"; do
+    if [ -d "$candidate" ]; then
+      SRC_ROOT="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ -z "$SRC_ROOT" ]; then
+  printf '\033[33m⚠  pre-commit: no src root detected; skipping component verifiers.\033[0m\n'
+  exit 0
+fi
+
+VERIFIER_DIR="$HOME/.claude/standards/scripts/verify"
+
+if [ ! -d "$VERIFIER_DIR" ]; then
+  printf '\033[31m❌ pre-commit: ~/.claude/standards/scripts/verify not found.\033[0m\n'
+  printf '   Install the standards or vendor the verifiers into the project.\n'
+  exit 1
+fi
+
+# Respect README.yaml status: a planning-status repo runs no component Gate 2
+# (per CLAUDE.md planning regime). The gate re-engages when status flips to shipping.
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
+for README in "$REPO_ROOT/README.yaml" "./README.yaml"; do
+  if [ -f "$README" ] && grep -qE '^\s*status:\s*planning\b' "$README"; then
+    printf '\033[33m⚠  pre-commit: README.yaml status:planning; component Gate 2 deferred until shipping.\033[0m\n'
+    exit 0
+  fi
+done
+
+printf '🔍 pre-commit: running COMPONENT_CREATION verifiers against %s\n' "$SRC_ROOT"
+
+node "$VERIFIER_DIR/verify-component.mjs" --check component-design-locked "$SRC_ROOT" || exit 1
+node "$VERIFIER_DIR/verify-component.mjs" --check component-spec           "$SRC_ROOT" || exit 1
+node "$VERIFIER_DIR/verify-component.mjs" --check component-tokens         "$SRC_ROOT" || exit 1
+node "$VERIFIER_DIR/verify-component.mjs" --check component-state-vocab    "$SRC_ROOT" || exit 1
+
+printf '\033[32m✅ pre-commit: all component verifiers green\033[0m\n'

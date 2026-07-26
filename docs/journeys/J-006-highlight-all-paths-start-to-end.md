@@ -39,7 +39,14 @@ provenance:
     - "BPMN path-tracing / reachability-analysis conventions in process tools (Camunda Modeler, draw.io)"
     - "Graph reachability/all-simple-paths algorithms as exposed by general graph libraries consumed alongside React Flow"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/paths/__specs__/flows/detect-paths.flow.md"
+  - "src/react/__specs__/flows/select-path.flow.md"
+  - "src/react/__specs__/flows/use-paths.flow.md"
+  - "src/react/__specs__/flows/path-drawer.flow.md"
+  - "src/react/__specs__/flows/play-path-movie.flow.md"
+  - "src/react/__specs__/flows/use-playback.flow.md"
+  - "src/react/__specs__/flows/playback-controls.flow.md"
 ---
 
 # J-006: Detect and highlight all paths from a start to an end node

@@ -43,7 +43,8 @@ provenance:
     - "Standard npm-package due-diligence conventions (bundlephobia size checks, peerDependencies review, LICENSE review) applied before adopting any React UI dependency"
     - "Comparative landscape of Mermaid / React Flow (@xyflow/react) / Reaflow as the peer set developers already benchmark against"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "docs:README.md"
 ---
 
 # J-013: Evaluate the library before adopting it (build-vs-buy spike)

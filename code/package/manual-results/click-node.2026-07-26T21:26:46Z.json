@@ -1,0 +1,53 @@
+{
+  "v": 1,
+  "flow": "click-node",
+  "nonce": "88e19676088bb74c7b",
+  "walkedAt": "2026-07-26T21:26:46Z",
+  "ok": true,
+  "observed": [
+    {
+      "step": 1,
+      "action": "click body of node with no description (fc-node-s / 'Visitor', Author With Object story)",
+      "observed": "click reached a document-level DOM listener with target 'fc-node-s'; no fc-node-s-expand element exists in DOM; aria-label format confirmed elsewhere as '<type> node: <label>' (e.g. 'start node: Order placed')",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "click body of node with description (fc-node-form / 'Fill form')",
+      "observed": "click reached document listener with target 'fc-node-form'; fc-node-form-expand aria-expanded stayed 'false' (body click does not auto-expand)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "click that node's expand button",
+      "observed": "aria-expanded flipped to 'true'; node text became '▭Fill form−Email + password' (description visible); click-probe counter did NOT increment for this click (stayed at 1, same as after step 2) — confirms the expand-button click does not bubble/double-fire the node's click handler",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "click expand button again (collapse)",
+      "observed": "aria-expanded flipped back to 'false'; node text returned to '▭Fill form+' (description hidden)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "rapid triple-click the expand button",
+      "observed": "ended at aria-expanded='true' (odd number of toggles from collapsed state); exactly 1 expand button element and 1 description text block present (no duplicates/torn state); console onlyErrors=true returned none",
+      "verdict": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "attempt to drag a node (left_click_drag mousedown->move->mouseup) on a freshly reloaded story",
+      "observed": "all 6 node bounding-rect positions identical before and after the drag (e.g. fc-node-s stayed at doc-coords x=115,y=1) — node did not move",
+      "verdict": "PASS"
+    },
+    {
+      "step": 7,
+      "action": "attempt a connect gesture: drag from one node's bottom handle to a different node's top handle",
+      "observed": "edge group ids inside .react-flow__edges unchanged (e0..e5, matching the original 6 graph.edges) both before and after; no new edge visually or in DOM; console onlyErrors=true returned none",
+      "verdict": "PASS"
+    }
+  ],
+  "walker": "ui-walker",
+  "signature": "964265775ed046e71d57b96090020f7f8a97a41b8c0374214759f4fca263451a"
+}

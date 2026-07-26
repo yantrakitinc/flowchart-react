@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "flow": "render-flowchart",
+  "nonce": "d34d8a061c04abefd5",
+  "walkedAt": "2026-07-26T22:00:19.660Z",
+  "ok": true,
+  "observed": [
+    {
+      "step": 1,
+      "action": "load default valid chart (Path Detection story, direct iframe.html render)",
+      "observed": "fc-flowchart rendered; React Flow canvas visible with 7 nodes (Order placed, Review cart, Payment OK?, Manual review, Ship order, Payment failed, Delivered) and edges; path drawer showing Path 1 NEUTRAL / Path 2 ERROR / Path 3 WARNING; playback showing '1 / 5' fully visible, no error class present",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "edit chart control (Author With Text story) to malformed text 'this is not a valid flowchart line at all !!!'",
+      "observed": "doc query confirmed: flowchartClass='fc-flowchart fc-flowchart--error'; fc-parse-error present with role='alert', text='Flowchart parse error missing header (expected \"flowchart <DIR>\") (line 1)'; reactFlowPresent=false (no canvas alongside error box)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "set chart='flowchart TD\\n a([AlphaNode])-->b[BetaNode]' AND graph={id:gammaflow,nodes:[GammaNode,DeltaNode],edges:[gamma->delta]} simultaneously via raw JSON editor on graph control",
+      "observed": "DOM query of .react-flow__node textContent returned exactly ['▶AlphaNode','■BetaNode'] — canvas rendered chart's nodes only; graph control held Gamma/Delta object (confirmed via URL args: graph.nodes[0].label:GammaNode, graph.nodes[1].label:DeltaNode) but was not rendered — chart-over-graph precedence confirmed",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "set chart control to empty string ''",
+      "observed": "flowchartClass='fc-flowchart fc-flowchart--error'; fc-parse-error shown with role='alert', text='Flowchart parse error empty diagram (line 1)'; nodeCount=0; no thrown/uncaught error",
+      "verdict": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "narrow-viewport re-verification of two fixes: (a) constrained fc-flowchart to 377px via inline style (matches prior FAIL-walk methodology) on Path Detection story; (b) cross-checked with a genuine fresh mount at 305px content width via Storybook viewport addon (mobile1, 320x568) for an authentic no-post-mount-resize-artifact reading",
+      "observed": "At 377px: flowchartClientWidth=377, containerType='inline-size', overflowX='hidden'; .fc-canvas rect width=377 height=307.66 (NOT 0), computed minHeight='260px', boxSizing='content-box' (unchanged, as spec'd); .fc-path-drawer rect width=377 y=308.66 (stacked directly below canvas, boxSizing='border-box'); .fc-playback rect width=377 y=470.34 (stacked directly below drawer, boxSizing='border-box'); playbackWidthMinusContainerWidth=0 (FIX CONFIRMED — prior walk found +19px overflow here); playback.textContent='⏮▶⏭⟲1 / 5' fully present, scrollWidth(377)===clientWidth(377) (no internal clipping, counter no longer truncated). At genuine fresh-mount 305px (Storybook viewport addon, full remount): canvas width=305 (NOT 0), playbackWidthMinusContainerWidth=0, playback text '1 / 5' fully present, 5/7 nodes directly in view (remaining 2 reachable via pan/zoom — expected canvas behavior, confirmed recoverable: clicking .react-flow__controls-fitview after the 377px post-mount resize brought nodes back into frame, proving the pan/zoom state is user-recoverable via the shipped fit-view control, not a broken/dead-end state). No horizontal scroll, no clipping of playback counter, no overlap between canvas/drawer/playback.",
+      "verdict": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "check browser console for uncaught exceptions / unhandled rejections across steps 1-5, across both tabs used (Author-With-Text tab and Path-Detection tab)",
+      "observed": "read_console_messages(onlyErrors=true, pattern='.') on both tabs returned 'No console errors or exceptions found for this tab' after all steps 1-5 completed",
+      "verdict": "PASS"
+    }
+  ],
+  "walker": "ui-walker",
+  "signature": "ca41d6c80932682875726ca7d0f711cc3f0fd3192041413a769e3e17095d6a80"
+}
