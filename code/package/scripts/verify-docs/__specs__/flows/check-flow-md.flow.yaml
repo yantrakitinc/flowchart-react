@@ -1,0 +1,73 @@
+flow: checkFlowMd
+kind: service-method
+source: scripts/verify-docs/verify-docs.mjs
+symbol: checkFlowMd
+inputs:
+  file: absolute path to *.flow.md
+  relPath: display path
+  injected: optional { readFile } injection
+returns:
+  - "string[] — error list (empty when file is well-formed)"
+throws: []
+calls:
+  - readFile (default)
+  - splitFrontmatter
+  - parseFrontmatterKeys
+  - extractH2
+  - sectionBodies
+  - isNewFormFlow
+called_by:
+  - audit
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: scripts/verify-docs/__tests__/verify-docs.test.mjs
+spec: scripts/verify-docs/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only audit calls this"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy_legacy:
+    - lives inside __specs__/flows/; ≥1 legacy heading; no dupes; no empty sections; frontmatter (if present) allowlisted
+    - return []
+  happy_new_form:
+    - lives inside __specs__/flows/; carries all 5 NEW-form headings; '## Diagram' (if present) precedes '## Pre-conditions' and contains a mermaid fence
+    - return []
+  error_outside_flows_dir:
+    - file does not live in __specs__/flows/
+    - return ['<rel>: flow doc must live inside __specs__/flows/']
+  error_malformed_frontmatter:
+    - frontmatter has an unparseable line
+    - return ['<rel>: malformed frontmatter (...)']
+  error_disallowed_frontmatter_key:
+    - frontmatter carries a key not on the allowlist
+    - return ['<rel>: frontmatter key "<k>" not in the allowlist (allowed: ...)']
+  error_no_headings:
+    - file has zero ## headings
+    - return ['<rel>: no `## ` headings found']
+  error_duplicate_heading:
+    - heading appears twice
+    - return ['<rel>: duplicate heading "<h>"']
+  error_empty_section:
+    - heading present but no body content
+    - return ['<rel>: section "## <h>" is empty (use "None." if intentional)']
+  error_no_recognised_headings:
+    - file is neither NEW-form nor legacy (zero recognised legacy headings)
+    - return ['<rel>: flow doc carries neither NEW-form headings ... nor any LEGACY heading ...']
+  error_new_form_missing_heading:
+    - NEW-form distinctive heading present but one of the 5 canonical headings is missing
+    - return ['<rel>: NEW-form flow missing heading "## <h>"']
+  error_diagram_misordered:
+    - '## Diagram' appears AFTER '## Pre-conditions'
+    - return ['<rel>: optional "## Diagram" heading must precede "## Pre-conditions"']
+  error_diagram_no_mermaid:
+    - '## Diagram' heading present but no ```mermaid``` fence in its body
+    - return ['<rel>: "## Diagram" must contain a ```mermaid``` code fence']
+  error_legacy_flow_diagram_no_mermaid:
+    - legacy '## Flow Diagram' heading present without a ```mermaid``` fence
+    - return ['<rel>: "## Flow Diagram" must contain a ```mermaid``` code fence']

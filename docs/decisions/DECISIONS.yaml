@@ -1,0 +1,53 @@
+# Repo decision log — user rulings specific to @yantrakit/flowchart-react.
+# Append-only; newest entry for a topic wins. Schema: ~/.claude/standards/DECISION_LOG.md
+decisions:
+  - date: 2026-07-26
+    scope: package.yantrakit.flowchart-react
+    decision: >-
+      v2 is a Mermaid-like, AI-first React flowchart. Author diagrams as text (a
+      Mermaid-familiar DSL) OR as an object; render on React Flow (@xyflow/react)
+      with a real interactive UI per node and semantic path detection.
+    context: user asked to rethink the package from scratch for a Mermaid-like, AI-first flowchart
+    source: user
+  - date: 2026-07-26
+    scope: package.yantrakit.flowchart-react
+    decision: >-
+      Own the DSL parser, the IR, the layout mapping, the semantic path model, and a
+      node-type registry; DELEGATE interactive rendering (custom per-node React
+      components, zoom/pan/minimap, edge routing) to React Flow.
+    context: chose React Flow over a custom SVG stack or a headless multi-renderer core
+    source: user
+  - date: 2026-07-26
+    scope: package.yantrakit.flowchart-react
+    decision: >-
+      Layout is a pluggable strategy interface. Ship dagre as the default engine; allow
+      ELK (elkjs) as an opt-in engine. Both honor direction (TD/BT/LR/RL).
+    context: v2 layout-engine choice
+    source: user
+  - date: 2026-07-26
+    scope: package.yantrakit.flowchart-react
+    decision: >-
+      v2 is a CLEAN BREAK to v2.0.0. Drop the v1 `flow` object API; expose `chart`
+      (text DSL) and `graph` (IR object) props only. No compat shim.
+    context: from-scratch rewrite; user chose clean break over an adapter (major bump authorized by user)
+    source: user
+  - date: 2026-07-26
+    scope: package.yantrakit.flowchart-react
+    decision: >-
+      Ship RICH, extensible default node components (icon + label + optional description
+      + status color + click/expand affordance) plus a node-type registry so consumers
+      can fully replace them.
+    context: user prioritized 'a real interactive UI per node' as the showcase
+    source: user
+  - date: 2026-07-26
+    scope: package.yantrakit.flowchart-react
+    decision: >-
+      Build v2 from scratch under the FULL standards regime — provision the repo, file the
+      issue, journeys → specs → code → verifier locks → PR. No retrofitting onto
+      already-written code. The first (non-regime) implementation attempt was scratched
+      entirely at the user's instruction.
+    context: >-
+      A first pass implemented v2 code with passing tests but bypassed GitFlow, spec-first
+      writing order, lock files, verifier modes, journeys, and the conversations log. User
+      rejected the retrofit and required a clean regime-driven rebuild.
+    source: user

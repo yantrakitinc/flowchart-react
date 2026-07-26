@@ -1,0 +1,42 @@
+flow: isUserFacingSurfaceFolder
+kind: predicate
+source: scripts/verify-manual-playbooks/verify-manual-playbooks.mjs
+symbol: isUserFacingSurfaceFolder
+inputs:
+  dir: absolute path
+  injected: optional IO injection (readDir / statFile)
+returns:
+  - "true when dir directly contains a route.ts or page.tsx file"
+  - "false otherwise"
+throws: []
+calls:
+  - readdirSync (default port)
+  - statSync (default port)
+called_by:
+  - audit
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: scripts/verify-manual-playbooks/__tests__/verify-manual-playbooks.test.mjs
+spec: scripts/verify-manual-playbooks/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only audit calls this"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy_route:
+    - directory directly contains route.ts; return true
+  happy_page:
+    - directory directly contains page.tsx; return true
+  reject_no_route_or_page:
+    - directory contains neither file; return false
+  edge_readdir_throws:
+    - readdir throws (permission / ENOENT); swallow, return false
+  edge_stat_throws:
+    - stat on the candidate file throws; skip that entry, fall through
+  edge_route_is_dir_not_file:
+    - entry is named route.ts but is a directory (unlikely but defensive); skip

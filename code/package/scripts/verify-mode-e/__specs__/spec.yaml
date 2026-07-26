@@ -1,0 +1,27 @@
+feature_name: scripts-verify-mode-e
+version: 1
+operation:
+  name: Verifier Mode E — entire-repo stamp update (fans Mode A)
+  slug: "(internal)"
+  description: Discovers every slice that owns a `__specs__/standards-compliance.yaml` via `findAllLocks` (from Mode Inspect), invokes Mode A against each. Aggregates verdicts and per-slice exit codes. Used to re-stamp the whole repo after a sweeping change.
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: after a sweeping change that invalidates many stamps at once (e.g., a verifier-mode rework, or migrating to a new test framework)
+  when_not_to_call: per-slice (Mode A), per-branch (Mode C), per-commit (Mode B), per-working-tree (B.5)
+  natural_language_examples:
+    - "mode E"
+    - "re-stamp every lock in the repo"
+  confirm_before: "yes — Mode E mutates every lock file in the repo"
+  summarize_after_success: "Mode E: PASS — <N> slices re-stamped"
+  summarize_after_failure: "Mode E: FAIL — <count> slices failed Mode A"
+cross_cutting:
+  wcag: "n/a — CLI"
+  auth: "filesystem + spawn Mode A"
+  mobile: "n/a — CLI"
+  i18n: "operator-log English-only"
+links:
+  flows:
+    - flows/main.flow.yaml

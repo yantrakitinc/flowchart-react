@@ -1,0 +1,20 @@
+questions:
+  - id: q1
+    question: "What does `pnpm verify:migration-replay` actually do?"
+    expected: "It loads every `.sql` file under `src/db/migrations/` via the shared loader at `src/db/migrations/loader/loader.ts`, then applies each statement against a fresh in-memory pglite database. If any statement is rejected by pglite, the script fails the build with the offending statement, the Postgres error, and a suggested fix."
+
+  - id: q2
+    question: "If a new migration uses `CREATE EXTENSION vector`, what happens?"
+    expected: "The replay fails. The script prints the statement preview, the Postgres `extension \"vector\" is not available` error (or equivalent), and the suggested fix: add a substring of the statement (`CREATE EXTENSION IF NOT EXISTS vector` or similar) to `INCOMPATIBLE_PATTERNS` in `src/db/migrations/loader/loader.ts`. Production Postgres still runs the statement; the loader filters it out for pglite-backed environments (tests + this replay script)."
+
+  - id: q3
+    question: "Why is this script wired into `pnpm verify` if Vitest tests already use the same loader?"
+    expected: "Two reasons. (1) The Vitest tests apply the migrations as a side-effect of calling `createTestDb()`. If no test happens to be running yet for a fresh migration, the incompatibility ships unnoticed. This script applies the FULL migration set explicitly, every time, regardless of test coverage. (2) It produces a focused error message — the failing statement + the loader fix hint — instead of an arbitrary test-suite error that doesn't point at the migration."
+
+  - id: q4
+    question: "What happens if the migrations directory is empty?"
+    expected: "The script exits 1 with `verify-migration-replay: the loader returned zero statements — refusing to claim success on an empty replay`. An empty replay is treated as a defect, not success, so a wiped migrations directory cannot silently pass the gate."
+
+  - id: q5
+    question: "Does the replay script also verify RLS / permissions / data semantics?"
+    expected: "No. The script is a SYNTAX + DDL-execution gate only. It confirms every migration statement can be parsed + applied by pglite. Semantic verification (e.g. that an RLS policy actually denies the right rows) lives in the integration tests under `src/db/identity/**/__tests__/`."

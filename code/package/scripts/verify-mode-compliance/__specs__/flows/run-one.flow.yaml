@@ -1,0 +1,39 @@
+flow: runOne
+kind: service-method
+source: scripts/verify-mode-compliance/verify-mode-compliance.mjs
+symbol: runOne
+inputs:
+  entry: "iScriptEntry"
+  io: "optional IO injection (rootDir / runChild / now)"
+returns:
+  - "{ entry, status, stdout, stderr, ms }"
+throws: []
+calls:
+  - buildCommand
+  - defaultRunChild (or injected runChild)
+called_by:
+  - main (via runInPool + the sequential phase-2 loop)
+emits_events: []
+side_effects_on_success: ["spawns a single child process via stdio: ignore + pipe + pipe"]
+side_effects_on_failure: "captures the non-zero exit + stderr; never throws"
+transaction: none
+test: scripts/verify-mode-compliance/__tests__/verify-mode-compliance.test.mjs
+spec: scripts/verify-mode-compliance/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only main composes runOne"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy:
+    - buildCommand resolves argv (plain node OR --import tsx)
+    - runChild resolves with status + stdout + stderr
+    - now() bookends measure ms wall-clock
+  edge_spawn_error:
+    - defaultRunChild catches a 'error' event and resolves with status=1 + stderr prefixed by 'orchestrator: spawn error'
+  edge_signal_kill:
+    - child killed by signal → close fires with code=null → wrapper returns 0 via `code ?? 0`
+  edge_timeout_sigkill_escalation:
+    - "defaultRunChild's `options` accepts `spawn` (default: `node:child_process` spawn) AND `killTimeoutMs` (default: 5000ms — interval between the SIGTERM that fires at `timeoutMs` and the SIGKILL escalation). Both ports are injectable so the test suite can drive the SIGTERM→SIGKILL escalation in ~5ms instead of waiting 5 real seconds."

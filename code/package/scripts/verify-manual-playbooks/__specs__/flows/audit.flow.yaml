@@ -1,0 +1,45 @@
+flow: audit
+kind: service-method
+source: scripts/verify-manual-playbooks/verify-manual-playbooks.mjs
+symbol: audit
+inputs:
+  appRoot: absolute path to src/app/
+  injected: optional IO injection
+returns:
+  - "{ errors, foldersChecked, playbooksWithAllHeaders }"
+throws: []
+calls:
+  - listAllDirs (default port)
+  - isUserFacingSurfaceFolder
+  - listFlowBasenames
+  - checkPlaybook
+  - checkHeaders
+called_by:
+  - main
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: scripts/verify-manual-playbooks/__tests__/verify-manual-playbooks.test.mjs
+spec: scripts/verify-manual-playbooks/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only main composes audit"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy:
+    - walk every directory under appRoot
+    - skip non-surface folders (no route.ts / page.tsx)
+    - for each surface folder, list flow basenames; skip if empty
+    - for each basename, checkPlaybook; if ok, read each markdown file and check headers
+  error_missing_playbook:
+    - flow basename has no matching playbook in any of the accepted shapes
+    - record MISSING <expected> for <relFolder>
+  error_missing_header:
+    - markdown playbook lacks one or more mandatory headers
+    - record MISSING_HEADER for each absent header
+  edge_yaml_skipped:
+    - playbook file ends with .yaml; header check is skipped (schema-validated elsewhere)

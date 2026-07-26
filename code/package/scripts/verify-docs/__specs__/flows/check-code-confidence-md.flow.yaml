@@ -1,0 +1,41 @@
+flow: checkCodeConfidenceMd
+kind: service-method
+source: scripts/verify-docs/verify-docs.mjs
+symbol: checkCodeConfidenceMd
+inputs:
+  file: absolute path to CODE_CONFIDENCE.md
+  relPath: display path
+  injected: optional { readFile } injection
+returns:
+  - "string[] — error list (empty when file is well-formed)"
+throws: []
+calls:
+  - readFile (default)
+called_by:
+  - audit
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: scripts/verify-docs/__tests__/verify-docs.test.mjs
+spec: scripts/verify-docs/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only audit calls this"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy:
+    - exactly 10 gate rows (lines starting with '| <digit> |'); 'Overall confidence:' line; no ❌
+    - return []
+  error_wrong_gate_count:
+    - gate rows ≠ 10
+    - return ['<rel>: expected 10 gate rows, found <n>']
+  error_missing_overall_line:
+    - file lacks 'Overall confidence:' substring
+    - return ['<rel>: missing "Overall confidence:" line']
+  error_contains_hard_fail:
+    - file contains ❌ (hard fail symbol)
+    - return ['<rel>: contains ❌ (hard fail symbol)']

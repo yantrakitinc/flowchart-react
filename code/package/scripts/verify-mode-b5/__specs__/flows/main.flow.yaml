@@ -1,0 +1,46 @@
+flow: main
+kind: helper
+source: verify-mode-b5.mjs
+symbol: main
+inputs:
+  io: optional IO ports — rootDir / getChanged / readFile / gitLastCommit / write / writeErr
+returns:
+  - "{ exitCode: 0 | 1, locksChecked: string[], failures: Array<{ lock: string, gate: 'shape' | 'freshness', reason: string }> }"
+throws: []
+calls:
+  - getWorkingTreeChangedPaths (default for getChanged)
+  - locksFromChangedPaths (scripts/verify-mode-d/verify-mode-d.mjs)
+  - checkLockShape (scripts/verify-mode-d/verify-mode-d.mjs)
+  - checkFreshness (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+  - defaultGitLastCommit (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+called_by:
+  - cliMain
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: ["none"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: pre-stage gate when developer wants to ship working-tree state
+  when_not_to_call: HEAD / branch / repo level (use B / D / F instead)
+  natural_language_examples:
+    - "mode B.5"
+    - "validate uncommitted stamps"
+  agent_invocation: "internal — `node scripts/verify-mode-b5/verify-mode-b5.mjs`"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "Mode B.5 verdict + per-lock failure breakdown"
+paths:
+  happy:
+    - getChanged returns N paths from `git status --porcelain=v1`
+    - locksFromChangedPaths resolves each to its slice lock
+    - per-lock: shape + freshness gates pass; print OK + exit 0
+  edge_clean_tree:
+    - working tree clean; getChanged returns []; print "clean" + exit 0
+  edge_no_spec_slices:
+    - changed paths don't resolve to any spec'd slice; exit 0
+  edge_rename:
+    - porcelain row "R xx old -> new" — only the new path is kept
+  error_shape_fail:
+    - lock does not match shape contract; gate=shape; exit 1
+  error_freshness_fail:
+    - last commit on the slice > stamp + grace; gate=freshness; exit 1

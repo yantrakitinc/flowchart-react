@@ -1,0 +1,40 @@
+feature_name: scripts-verify-ui-components-compliance
+version: 1
+operation:
+  name: G-UI-COMPONENTS — COMPONENT_FOLDERS.yaml + COMPONENT_LIBRARY_DOCTRINE.yaml compliance gate
+  slug: "(internal)"
+  description: |
+    Mechanical gate for the three component shape / placement / styling
+    rules defined in COMPONENT_FOLDERS.yaml + COMPONENT_LIBRARY_DOCTRINE.yaml
+    contract (RULE FE-1 / FE-3 / FE-4). Walks frontend/src/ and fails on:
+    GATE-1 component-folder shape (each component lives in its own
+    PascalCase folder with .tsx + index.ts + __tests__ + __stories__
+    + __specs__/spec.yaml + standards-compliance.yaml),
+    GATE-2 hardcoded Tailwind `<color>-<shade>` classes outside
+    src/components/shadcn/ and src/i18n/messages/,
+    GATE-3 components in the wrong location (must live under
+    src/components/ui/<Name>/, src/features/<f>/components/<Name>/,
+    src/components/shadcn/, or src/app/).
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: pnpm verify chain; component scaffolding review
+  when_not_to_call: mid-feature work where scaffolding is incomplete
+  natural_language_examples:
+    - "run G-UI-COMPONENTS"
+    - "check the UI components are compliant"
+  confirm_before: "none — read-only"
+  summarize_after_success: "verify-ui-components-compliance: PASS — <N> component folder(s) checked; no shade classes; no misplaced components."
+  summarize_after_failure: "verify-ui-components-compliance: violations across GATE-1 / GATE-2 / GATE-3 — quote breakdown verbatim"
+cross_cutting:
+  wcag: "n/a — CLI"
+  auth: "filesystem only"
+  mobile: "n/a — CLI"
+  i18n: "operator-log English-only"
+links:
+  flows:
+    - flows/run-audit.flow.yaml
+  tests:
+    - __tests__/verify-ui-components-compliance.test.mjs

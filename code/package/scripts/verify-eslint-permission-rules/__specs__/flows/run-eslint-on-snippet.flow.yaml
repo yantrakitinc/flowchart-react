@@ -1,0 +1,39 @@
+flow: runEslintOnSnippet
+kind: side-effect-helper
+source: scripts/verify-eslint-permission-rules/verify-eslint-permission-rules.mjs
+symbol: runEslintOnSnippet
+inputs:
+  eslintBin: absolute path to the ESLint binary
+  cwd: directory to run ESLint in
+  virtualPath: stdin-filename used for files-glob match
+  source: TypeScript source piped via stdin
+  injected: optional IO injection (runEslint port)
+returns:
+  - "Array of { messages: ... } — ESLint's JSON output"
+throws:
+  - "Error('eslint invocation failed ...') when spawn returns error"
+  - "Error('Could not parse eslint JSON output ...') when stdout isn't JSON"
+calls:
+  - spawnSync (default port)
+called_by:
+  - checkFixture
+emits_events: []
+side_effects_on_success: ["spawns a child ESLint process"]
+side_effects_on_failure: "throws synchronously"
+transaction: none
+test: scripts/verify-eslint-permission-rules/__tests__/verify-eslint-permission-rules.test.mjs
+spec: scripts/verify-eslint-permission-rules/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only checkFixture uses this"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — synchronous helper"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy:
+    - spawn returns valid JSON; parsed result is returned
+  error_spawn_failed:
+    - result.error is set (e.g. binary not found); throw with 'eslint invocation failed'
+  error_invalid_json:
+    - result.stdout isn't valid JSON; throw with 'Could not parse eslint JSON output'

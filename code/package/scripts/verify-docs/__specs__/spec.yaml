@@ -1,0 +1,39 @@
+feature_name: scripts-verify-docs
+version: 1
+operation:
+  name: Verify docs (spec.md + flow.md + CODE_CONFIDENCE.md)
+  slug: "(internal)"
+  description: Per-folder landing-zone checks plus per-file shape checks for spec.md, *.flow.md, and CODE_CONFIDENCE.md across src/ and e2e/.
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: User asks "are the docs in good shape?" or "is the __specs__ landing zone clean?" or as part of pnpm verify.
+  when_not_to_call: During mid-feature work — partial docs are expected before manual verification stamps the lock file.
+  natural_language_examples:
+    - "verify docs"
+    - "are all spec.md / flow.md files well-formed?"
+    - "any missing CODE_CONFIDENCE.md scorecards?"
+  confirm_before: "none — read-only"
+  summarize_after_success: "verify-docs: OK (<N> __specs__ folder(s); <X> spec.md, <Y> flow.md, <Z> CODE_CONFIDENCE.md checked)"
+  summarize_after_failure: "verify-docs: <N> issue(s) — <list>"
+cross_cutting:
+  wcag: "n/a — CLI script"
+  auth: "none — filesystem-only"
+  mobile: "n/a — CLI script"
+  i18n: "none — script output is English-only operator log"
+links:
+  flows:
+    - flows/main.flow.yaml
+    - flows/audit.flow.yaml
+    - flows/check-specs-folder.flow.yaml
+    - flows/check-spec-md.flow.yaml
+    - flows/check-flow-md.flow.yaml
+    - flows/check-code-confidence-md.flow.yaml
+    - flows/is-inside-backup-folder.flow.yaml
+    - flows/section-body-text.flow.yaml
+  tests:
+    - __tests__/verify-docs.test.mjs
+  manual:
+    - manual/verify-docs.yaml

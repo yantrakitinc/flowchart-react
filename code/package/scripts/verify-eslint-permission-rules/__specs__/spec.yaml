@@ -1,0 +1,35 @@
+feature_name: scripts-verify-eslint-permission-rules
+version: 1
+operation:
+  name: Verify ESLint permission-rule guards
+  slug: "(internal)"
+  description: "Feeds known-violating and known-allowed TypeScript snippets through ESLint via stdin and asserts the PRIMARY-RULE guards fire or pass as documented."
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: User asks "are the PRIMARY-RULE ESLint guards still wired?" or as part of pnpm verify.
+  when_not_to_call: Mid-refactor of eslint.config.mjs — the gate is exactly what catches that drift, so let it speak.
+  natural_language_examples:
+    - "verify eslint permission rules"
+    - "are the brand-cast / raw-db / module-boundary guards still wired?"
+    - "any drift in eslint.config.mjs?"
+  confirm_before: "none — read-only, spawns the local ESLint binary"
+  summarize_after_success: "verify-eslint-permission-rules: OK (<N> fixture(s) checked)"
+  summarize_after_failure: "verify-eslint-permission-rules: <N> fixture failure(s) — <list>"
+cross_cutting:
+  wcag: "n/a — CLI script"
+  auth: "none — filesystem-only"
+  mobile: "n/a — CLI script"
+  i18n: "none — script output is English-only operator log"
+links:
+  flows:
+    - flows/main.flow.yaml
+    - flows/audit.flow.yaml
+    - flows/check-fixture.flow.yaml
+    - flows/run-eslint-on-snippet.flow.yaml
+  tests:
+    - __tests__/verify-eslint-permission-rules.test.mjs
+  manual:
+    - manual/verify-eslint-permission-rules.yaml

@@ -1,0 +1,27 @@
+feature_name: scripts-verify-mode-b
+version: 1
+operation:
+  name: Verifier Mode B — HEAD-only stamp + freshness check
+  slug: "(internal)"
+  description: HEAD-scoped stamp + freshness gate. For each lock owned by a slice touched by HEAD (vs HEAD~1), asserts shape (status:locked, verified:100%, last_validated ISO-8601 UTC) AND git-history freshness (last commit ≤ last_validated + grace). No code execution beyond `git diff-tree` + `git log`. Read-only. Refuses any slice whose status is `unlocked`.
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: validate the most-recent commit's stamps (e.g., after Mode A finishes)
+  when_not_to_call: branch-level validation (use Mode D) or entire-repo validation (use Mode F)
+  natural_language_examples:
+    - "validate the last commit's stamps"
+    - "mode B"
+  confirm_before: "none — read-only"
+  summarize_after_success: "Mode B: PASS — all HEAD stamps locked + fresh"
+  summarize_after_failure: "Mode B: FAIL — <count> stamps failed shape or freshness"
+cross_cutting:
+  wcag: "n/a — CLI"
+  auth: "filesystem + git only"
+  mobile: "n/a — CLI"
+  i18n: "operator-log English-only"
+links:
+  flows:
+    - flows/main.flow.yaml

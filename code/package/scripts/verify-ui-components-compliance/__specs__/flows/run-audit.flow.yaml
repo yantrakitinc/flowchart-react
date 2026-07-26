@@ -1,0 +1,51 @@
+flow: runAudit
+kind: helper
+source: scripts/verify-ui-components-compliance/verify-ui-components-compliance.mjs
+symbol: runAudit
+inputs:
+  rootDir: absolute path to the frontend root (defaults to module-resolved frontend/)
+returns:
+  - "number — 0 on PASS, 1 on any violation"
+throws: []
+calls:
+  - collectFiles
+  - collectComponentFolders
+  - auditFolderShape
+  - findMisplacedComponents
+  - isShadeExempt
+  - findShadeViolations
+called_by:
+  - maybeRunCli (CLI dispatcher)
+  - test suite
+emits_events: []
+side_effects_on_success: ["writes one PASS line to stdout"]
+side_effects_on_failure: ["writes per-gate (GATE-1 / GATE-2 / GATE-3) breakdown to stderr"]
+transaction: none
+test: scripts/verify-ui-components-compliance/__tests__/verify-ui-components-compliance.test.mjs
+spec: scripts/verify-ui-components-compliance/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: pre-push UI-component verification; pnpm verify chain
+  when_not_to_call: mid-feature work where scaffolding is incomplete
+  natural_language_examples:
+    - "run G-UI-COMPONENTS"
+    - "check the UI components are compliant"
+  agent_invocation: "internal — `node scripts/verify-ui-components-compliance/verify-ui-components-compliance.mjs`"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "PASS line OR per-gate breakdown verbatim"
+paths:
+  happy:
+    - collectComponentFolders enumerates PascalCase folders under src/components/ui/ and src/features/*/components/
+    - auditFolderShape returns null for every folder (all required files present)
+    - findMisplacedComponents returns []
+    - findShadeViolations finds no shade classes in non-exempt trees
+    - emit PASS line + return 0
+  error_gate1_missing_files:
+    - a component folder is missing one or more required files; emit GATE-1 breakdown to stderr + return 1
+  error_gate2_shade_class:
+    - findShadeViolations matches a `<utility>-<color>-<shade>` token outside the exempt dirs; emit GATE-2 breakdown + return 1
+  error_gate3_misplaced_component:
+    - findMisplacedComponents reports a flat .tsx under src/components/ (not in shadcn/, not in ui/<Name>/); emit GATE-3 breakdown + return 1
+  edge_unreadable_file:
+    - readFileSync throws (permission / race); the shade check sees "" content and skips silently
+  edge_missing_dirs:
+    - components/ui/, features/, or features/<f>/components/ does not exist; the collector silently swallows and returns []

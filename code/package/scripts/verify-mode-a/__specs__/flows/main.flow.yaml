@@ -1,0 +1,49 @@
+flow: main
+kind: helper
+source: verify-mode-a.mjs
+symbol: main
+inputs:
+  slicePath: relative or absolute path to the slice folder
+  io: optional IO ports — rootDir / spawn / readFile / writeFile / now / write / skipTypecheck / skipStamp
+returns:
+  - "{ exitCode: 0 | 1, results: iGateResult[], stampedIso: string | null }"
+throws: []
+calls:
+  - hasSpecsFolder
+  - hasTestsFolder
+  - runScopedVitest
+  - runScopedLint
+  - runTypecheck
+  - runBoundaryGreps
+  - checkLockShape
+  - stampLock
+  - formatReport
+called_by:
+  - cliMain
+  - test suite
+emits_events: []
+side_effects_on_success: [stamps standards-compliance.yaml with last_validated=<now>]
+side_effects_on_failure: ["none"]
+transaction: none
+test: __tests__/verify-mode-a.test.mjs
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: end of a coder slice — verify before the lock is stamped
+  when_not_to_call: push-time verification (use Mode B) or full repo (Mode D)
+  natural_language_examples:
+    - "run Mode A on src/features/foo"
+    - "verify the slice and stamp the lock"
+  agent_invocation: "internal — `node scripts/verify-mode-a/verify-mode-a.mjs <slice-path>`"
+  confirm_with_user_before: "none — read-only except the lock stamp on green"
+  summarize_to_user_after: "Mode A verdict + reproduction lines for any failures"
+paths:
+  happy:
+    - validate slice path exists + has __specs__/
+    - run scoped vitest, scoped lint, project typecheck, boundary greps, lock-shape check
+    - on all green: stamp the lock to <utc-now>; exit 0
+  error_missing_slice:
+    - path does not resolve to an existing folder; emit FAIL line + exit 1; no stamping
+  error_missing_specs:
+    - slice exists but no __specs__/ folder; emit FAIL line + exit 1; no stamping
+  error_gate_fail:
+    - one or more gates failed; emit per-gate FAIL detail; verdict NOT SHIPPABLE; exit 1; no stamping

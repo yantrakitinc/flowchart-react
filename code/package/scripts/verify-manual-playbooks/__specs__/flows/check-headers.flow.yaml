@@ -1,0 +1,34 @@
+flow: checkHeaders
+kind: pure-helper
+source: scripts/verify-manual-playbooks/verify-manual-playbooks.mjs
+symbol: checkHeaders
+inputs:
+  text: raw markdown file contents
+returns:
+  - "string[] of missing required headers (empty = pass)"
+throws: []
+calls: []
+called_by:
+  - audit
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: scripts/verify-manual-playbooks/__tests__/verify-manual-playbooks.test.mjs
+spec: scripts/verify-manual-playbooks/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only audit calls this"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — pure helper"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy_all_present:
+    - all four mandatory headers appear (literal substring match, leading whitespace ok); return []
+  partial:
+    - one or more headers missing; return the missing list (in the canonical order)
+  edge_leading_whitespace:
+    - header line has leading whitespace; still recognised
+  edge_crlf:
+    - file uses CRLF line endings; still split correctly

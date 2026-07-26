@@ -1,0 +1,38 @@
+flow: main
+kind: composition-root
+source: scripts/verify-docs/verify-docs.mjs
+symbol: main
+inputs:
+  io: optional IO injection (src / e2e / IO ports / write / writeErr)
+returns:
+  - "{ exitCode: 0 }"
+  - "{ exitCode: 1 }"
+throws: []
+calls:
+  - audit
+  - formatReport
+called_by:
+  - cliMain
+  - scripts/verify-mode-compliance.mjs
+emits_events: []
+side_effects_on_success:
+  - "stdout: 'verify-docs: OK (<F> __specs__ folder(s); ...)'"
+side_effects_on_failure: "stderr emits summary + one line per issue; process exits 1"
+transaction: none
+test: scripts/verify-docs/__tests__/verify-docs.test.mjs
+spec: scripts/verify-docs/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "Whenever the user asks 'is the docs landing zone clean?' or as part of pnpm verify."
+  when_not_to_call: "Mid-feature work where partial docs are expected."
+  natural_language_examples:
+    - "verify docs"
+  agent_invocation: "internal — invoked by scripts/verify-mode-compliance.mjs"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "Quote stdout/stderr verbatim."
+paths:
+  happy:
+    - audit walks src/ + e2e/, runs every per-folder + per-file check
+    - zero issues → OK stdout, exitCode 0
+  error_issues_found:
+    - audit collects one or more issues
+    - formatReport emits summary + per-issue lines on stderr; exitCode 1

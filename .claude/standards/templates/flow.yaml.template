@@ -1,0 +1,57 @@
+# <fnName>.flow.yaml — per-exported-function flow doc.
+# See FLOW_CONTRACT.yaml for the schema (17 required keys + 1 optional `mermaid`).
+# Lives at: <feature-folder>/__specs__/flows/<fnName>.flow.yaml
+
+flow: <fnName>                              # the function name
+kind: <request-handler | predicate | service-method | repository-method | helper | composition-root>
+source: <path/to/source-file.ts>            # from repo root
+symbol: <fnName>                            # the exported symbol within source
+
+inputs:                                     # arg-name → type description
+  <argName>: "<type description>"
+
+returns:                                    # array of possible return shapes
+  - "<shape description, e.g., 200 with iLoginResponse on success>"
+  - "<another shape, e.g., 401 LOGIN_BAD_CREDENTIALS on mismatch>"
+
+throws: []                                  # declared error names; [] when none
+calls:                                      # downstream calls
+  - <other.function>
+called_by:                                  # upstream callers
+  - <other.caller>
+emits_events: []                            # event names; [] when none
+
+side_effects_on_success:
+  - <terse imperative, e.g., "sets HttpOnly session cookie">
+side_effects_on_failure: <"none" or one-line summary>
+transaction: <"none" or scope description>
+
+test: <path/to/__tests__/file.test.ts>
+spec: <path/to/__specs__/spec.yaml>
+
+ai_agent_action:                            # the agent's 6-sub-key invocation contract
+  when_to_call: "<trigger condition>"
+  when_not_to_call: "<anti-condition>"
+  natural_language_examples:
+    - "<example user phrase>"
+  agent_invocation: "<HTTP shape | UI nav | Server Action name | 'internal — not callable'>"
+  confirm_with_user_before: "<what to say before invoking; 'none — read-only' for safe reads>"
+  summarize_to_user_after: "<one-line summary template>"
+
+paths:                                      # named scenario paths
+  happy:
+    - step: "<step 1>"
+    - step: "<step 2>"
+    - step: "<...>"
+  # error_<name>:
+  #   - step: "<step>"
+  # edge_<name>:
+  #   - step: "<step>"
+
+# Optional Mermaid diagram. Required when fn has ≥ 2 paths OR ≥ 3 collaborators.
+# mermaid: |
+#   flowchart TD
+#     A[start] --> B[step]
+#     B --> C{decision}
+#     C -->|yes| D[outcome 1]
+#     C -->|no|  E[outcome 2]

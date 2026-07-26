@@ -1,0 +1,77 @@
+# <project>/.standards/autonomy.yaml — project-level autonomy + UI discipline config.
+# Read by the agent at session start; governs design + research gates across all 3 tiers.
+#
+# Copy this template to <project-root>/.standards/autonomy.yaml on bootstrap.
+# Schema reference: ~/.claude/standards/COMPONENT_CREATION.yaml.autonomy
+
+# ---------- UI discipline (READ FIRST) ----------
+
+ui_discipline: full
+  # full              — UI shipped; design phase mandatory; all verifiers apply
+  # crappy-permitted  — UI exists but design phase skip permitted per slice with explicit user permission
+  # none              — pure API project; UI verifiers short-circuit to green ("n/a — non-UI project")
+
+# ---------- design lock mode per tier ----------
+
+design_lock_mode:
+  atomic: autonomous       # autonomous | review-locked | mixed
+  composite: autonomous
+  page: autonomous
+
+blueprint_lock_mode: autonomous  # autonomous | review-locked — who signs docs/site/00-INDEX.md
+                                 # (per SITE_BLUEPRINT.yaml; default autonomous when absent)
+
+review_locked_overrides:
+  atomic: []               # glob list; review-locked only for paths matching when mode is "mixed"
+  composite: []
+  page: []
+
+# ---------- stakes signal source ----------
+
+brand_surfaces: []         # glob list; these match → stakes=brand
+internal_surfaces: []      # glob list; these match → stakes=internal
+                           # everything else → stakes=standard
+
+# ---------- coverage × stakes overrides (rarely needed) ----------
+
+depth_overrides:
+  # "<glob>": "<light | medium | thorough>"
+  []: []
+
+domain_survey_overrides:
+  force_on: []             # glob list
+  force_off: []
+
+# ---------- test coverage policy ----------
+
+coverage_policy:
+  atomic:
+    statements: 100
+    branches: 100
+    functions: 100
+    lines: 100
+    per_file: true
+  composite:
+    statements: 100
+    branches: 100
+    functions: 100
+    lines: 100
+    per_file: true
+  page:
+    statements: 95
+    branches: 90
+    functions: 100
+    lines: 95
+    per_file: false
+    note: pages compose 3rd-party libs; relax with reviewer awareness
+
+# ---------- pre-commit policy ----------
+
+pre_commit:
+  block_on_red: true
+  allow_no_verify_bypass: false
+
+# ---------- versioning ----------
+
+last_updated: 2026-07-26T00:00:00Z
+schema_version: 1

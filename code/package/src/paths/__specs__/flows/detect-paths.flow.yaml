@@ -1,0 +1,112 @@
+flow: detectPaths
+kind: service-method
+source: src/paths/detectPaths.ts
+symbol: detectPaths
+
+inputs:
+  graph: "iFlowGraph — { id, name, direction, nodes: iFlowNode[], edges: iFlowEdge[] }"
+
+returns:
+  - "iPathDetectionResult — { paths: iFlowPath[], startNodeIds: string[], endNodeIds: string[] }; always this one shape, never an error shape"
+
+throws: []
+
+calls:
+  - "resolveStarts (private helper, same file) — resolves startNodeIds"
+  - "resolveEnds (private helper, same file) — resolves endNodeIds"
+  - "findAllPaths (private helper, same file) — guarded DFS enumeration per start×end pair"
+  - "classifyPath (private helper, same file) — per-path iPathType classification"
+
+called_by:
+  - "src/react/usePaths.ts (usePaths hook, memoized per graph)"
+  - "src/react/PathDrawer.tsx (via usePaths)"
+  - "any external consumer of the published @yantrakit/flowchart-react package"
+
+emits_events: []
+
+side_effects_on_success:
+  - "none"
+
+side_effects_on_failure: "none — detectPaths never throws; there is no failure branch (see edge_boundary_* paths for how malformed/degenerate input is absorbed without throwing)"
+
+transaction: "none"
+
+test: src/paths/detectPaths.test.ts
+spec: src/paths/__specs__/spec.yaml
+
+ai_agent_action:
+  when_to_call: >-
+    When the caller holds a built iFlowGraph and needs the enumerated, semantically-classified
+    routes through it (render a path list, highlight the happy path, count error routes).
+  when_not_to_call: >-
+    Before the graph is fully parsed/built (parse/author it first). Not on every keystroke of a
+    large, highly-branching graph without memoizing — DFS cost is bounded but not free.
+  natural_language_examples:
+    - "show me the happy path through this flowchart"
+    - "which routes lead to an error state"
+    - "highlight all paths in this diagram"
+    - "how many distinct paths exist and which are risky"
+  agent_invocation: "internal — not callable over HTTP or UI directly; import { detectPaths } from '@yantrakit/flowchart-react' and call it with an iFlowGraph"
+  confirm_with_user_before: "none — read-only, pure computation, no side effects"
+  summarize_to_user_after: "\"Found {paths.length} path(s): {n} happy, {n} warning, {n} error, {n} neutral.\""
+
+paths:
+  happy:
+    - "Caller passes a well-formed iFlowGraph with an explicit start node, an explicit end node, and a mix of edge types along the route(s) between them."
+    - "resolveStarts finds the explicit type:'start' node(s); resolveEnds finds the explicit type:'end' node(s)."
+    - "For every (start, end) pair, findAllPaths runs a depth-first search over the adjacency map, tracking a visited-set to forbid revisiting a node within one route, and collects every simple route reached before either guard trips."
+    - "Each collected route is classified by classifyPath from the counts of happy/warning/error/default edges along it, and pushed onto the result with a sequential path-N id/name."
+    - "Returns { paths, startNodeIds, endNodeIds } with one entry per enumerated route, each carrying its ordered nodeIds/edgeIds and its iPathType."
+
+  edge_boundary_no_explicit_start_end:
+    - "Graph has no node with type:'start' — resolveStarts falls back to every node with no incoming edge; if that set is also empty, it falls back to the single first node in the array."
+    - "Graph has no node with type:'end' — resolveEnds falls back to every node with no outgoing edge (no further fallback; this set may legitimately be empty)."
+    - "detectPaths proceeds with whatever non-empty/empty start/end sets were resolved this way."
+
+  edge_boundary_empty_graph:
+    - "graph.nodes is empty (and therefore graph.edges is empty)."
+    - "resolveStarts and resolveEnds both resolve to []; the double for-loop over (start, end) pairs never executes; the paths.length === 0 fallback branch is also skipped because nodes.length is 0."
+    - "Returns { paths: [], startNodeIds: [], endNodeIds: [] }."
+
+  edge_boundary_no_resolvable_route:
+    - "Graph is non-empty but every DFS from every resolved start to every resolved end finds zero routes (e.g. a pure 2-node cycle a→b→a with no type:'start'/'end' nodes, so resolveEnds returns [] since both nodes have an outgoing edge)."
+    - "paths stays empty after the enumeration loop, but nodes.length > 0, so the neutral-fallback branch fires: a single path (id 'path-1') is pushed covering every node in declaration order and every edge in declaration order, typed 'neutral' unconditionally."
+    - "Returns exactly one fallback path; endNodeIds may legitimately be empty in this case."
+
+  edge_boundary_undeclared_edge_target:
+    - "An edge's `to` (or `from`) references a node id that does not appear in graph.nodes (e.g. a dangling/ghost reference)."
+    - "The adjacency map is built by iterating graph.nodes first (seeding every real node id with an empty array) then pushing each edge onto adjacency.get(e.from) — an edge whose `from` is not a real node is silently dropped (adjacency.get returns undefined, `?.push` no-ops); an edge whose `to` is a ghost id is still walked INTO but the DFS from that ghost id finds no further adjacency (empty array via `?? []`) and dead-ends without crashing."
+    - "detectPaths completes normally; routes through real reachable start→end pairs are still found and returned; the ghost id contributes no valid path."
+
+  edge_boundary_branch_explosion_cap:
+    - "Graph branches enough that the true path count would exceed MAX_PATHS (50) — e.g. N chained diamonds yield 2^N simple routes."
+    - "findAllPaths' DFS checks `results.length >= MAX_PATHS` at the top of every recursive call and returns immediately once the cap is hit, before exploring further branches."
+    - "detectPaths returns exactly 50 paths (never more), each still individually classified; enumeration is deterministic left-to-right over adjacency insertion order but truncated."
+
+  edge_boundary_cycle_depth_cap:
+    - "Graph contains a cycle reachable from a start node before an end node (e.g. a→b, b→a, b→c([End]))."
+    - "The DFS's `visited` set (seeded with the start id, mutated on entry/exit of each recursive call) forbids revisiting any node already on the current route, so the literal cycle can never be walked twice within one route; the `depth > MAX_DEPTH` (100) check is the secondary guard against any other runaway recursion."
+    - "detectPaths returns at least one bounded, finite-length path through the reachable end node; no path's node list can exceed the graph's own node count (the visited-set guarantee), so a small cyclic graph yields a short path, not an infinite one."
+
+  edge_boundary_classification_thresholds:
+    - "A route's edges are tallied into counts of {happy, warning, error, default} by classifyPath."
+    - "If counts.error > 0 AND counts.error >= counts.happy → the path is typed 'error' (error dominance wins ties against happy)."
+    - "Else if counts.warning > counts.happy AND counts.warning > counts.error → typed 'warning' (warning must strictly beat both other categories)."
+    - "Else if counts.happy > 0 → typed 'happy'."
+    - "Else (all-default, or a zero-edge single-node path) → typed 'neutral' — classifyPath also short-circuits to 'neutral' immediately when edgeIds.length === 0 (a start-node-is-also-end-node route)."
+
+mermaid: |
+  flowchart TD
+    A[detectPaths graph] --> B[resolveStarts]
+    A --> C[resolveEnds]
+    B --> D{startNodeIds x endNodeIds}
+    C --> D
+    D -->|for each pair| E[findAllPaths DFS]
+    E -->|MAX_PATHS / MAX_DEPTH guards| F[raw node/edge id routes]
+    F --> G[classifyPath per route]
+    G --> H[paths accumulator]
+    H --> I{paths.length === 0 and nodes.length > 0?}
+    I -->|yes| J[push single neutral fallback over all nodes/edges]
+    I -->|no| K[return as-is]
+    J --> L[return iPathDetectionResult]
+    K --> L

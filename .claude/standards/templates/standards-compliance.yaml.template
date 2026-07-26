@@ -1,0 +1,84 @@
+# standards-compliance.yaml — per-feature lock + freshness marker.
+# See LOCK_FILES.yaml for schema + workflow rules.
+# Lives at: <feature-folder>/__specs__/standards-compliance.yaml
+#
+# REQUIRED FIELDS — the four scalars below PLUS the standards: map (every registered standard). Do NOT add spec/flows/tests/manual/notes;
+# the verifiers read only status/verified/last_validated. Narrative belongs in spec.md;
+# history belongs in the Changelog story (UI) or git (everything else).
+#
+# Initial state on file creation: status:unlocked, verified:0%, last_validated empty.
+# After completing the full writing-order + manual walk:
+#   status: locked
+#   verified: 100%
+#   last_validated: <UTC ISO-8601 now>
+
+status: unlocked                            # "locked" only after the verify chain is green
+verified: "0%"                              # "100%" only when fully verified (no fractional)
+last_validated: ""                          # UTC ISO-8601 datetime when locked
+feature: <relative/path/to/feature-folder>
+
+# EVERY registered standard, deliberately stamped — none omitted. Verdicts:
+#   100%                       the feature meets this standard, verified
+#   NOT REQUIRED    this standard does not apply to this feature
+browser_validated: ""                       # REQUIRED when the feature ships UI — ISO-8601 UTC, stamped only after the real-browser walk (BROWSER_VALIDATION.yaml)
+
+standards:
+  ACCESSIBILITY: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  AGENT_AFFORDANCES: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  API_SURFACE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  AUTHORIZATION_STANDARDS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  BRANCHES_AND_COMMITS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  CODE_DOCUMENTATION: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  COMPONENT_CREATION: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  COMPONENT_DOCS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  COMPONENT_FOLDERS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  COMPONENT_LIBRARY_DOCTRINE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  COMPOSITE_CREATION: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  DECISION_LOG: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  DESIGN_TOKENS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  E2E_TESTING: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  ENV_VARS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  FLOW_CONTRACT: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  GOOGLE_FIREBASE_STANDARDS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  HEXAGONAL_ARCHITECTURE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  I18N: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  INDUSTRY_STANDARDS_STACK: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  ISSUES: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  LOCAL_DEV_NETWORK: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  LOCK_FILES: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  LOGGING: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  MANUAL_FLOWS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  MOBILE_FIRST: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  MOCKING_DOCTRINE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  NAMING: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  NO_THEATER_TESTS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  PACKAGE_PROJECT_STANDARDS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  PAGE_CREATION: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  PROCESS_DISCIPLINE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  PROJECT_ARCHITECTURE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  PULL_REQUESTS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  README_CONTRACT: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  REPO_GATE_INSTALLATION: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  REPO_PROVISIONING: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  ROOT_LAYOUT: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  SCENARIO_ENUMERATION: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  SITE_BLUEPRINT: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  SOURCE_COVERAGE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  SOURCE_FOLDERS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  SPEC_CONTRACT: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  STACK: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  STANDARDS_CREATION_STANDARDS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  STATE_VOCABULARY: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  STORYBOOK_SETUP: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  STORYBOOK_TESTING: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  STORY_FORMAT: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  SUPERPOWERS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  TEST_NAMING: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  TEST_STACK: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  TYPESCRIPT_HYGIENE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  UNIT_COVERAGE: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  UTC_TIMESTAMPS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  VERCEL_STANDARDS: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  VERIFIER_MODES: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  VERIFY_MANUAL_STORIES: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here
+  WRITING_ORDER: NOT REQUIRED   # stamp 100% at lock time when it applies; the WHY of a NOT REQUIRED lives in spec.md / companion md, never here

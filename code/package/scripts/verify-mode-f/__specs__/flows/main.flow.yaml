@@ -1,0 +1,41 @@
+flow: main
+kind: helper
+source: verify-mode-f.mjs
+symbol: main
+inputs:
+  io: optional IO ports — rootDir / findLocks / readFile / gitLastCommit / write / writeErr
+returns:
+  - "{ exitCode: 0 | 1, locksChecked: string[], failures: Array<{ lock: string, gate: 'shape' | 'freshness', reason: string }> }"
+throws: []
+calls:
+  - findAllLocks (scripts/verify-mode-inspect/verify-mode-inspect.mjs) — default for findLocks
+  - checkLockShape (scripts/verify-mode-d/verify-mode-d.mjs)
+  - checkFreshness (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+  - defaultGitLastCommit (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+called_by:
+  - cliMain
+  - scripts/verify-mode-f-random/verify-mode-f-random.mjs (passes a random subset via findLocks injection)
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: ["none"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: full-repo audit / pre-release gate
+  when_not_to_call: scoped validators (B / B.5 / D) or random sample (F-Random)
+  natural_language_examples:
+    - "mode F"
+    - "validate every stamp"
+  agent_invocation: "internal — `node scripts/verify-mode-f/verify-mode-f.mjs`"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "Mode F verdict + per-lock failure breakdown"
+paths:
+  happy:
+    - findLocks returns N locks from the entire repo
+    - per-lock shape + freshness pass; print OK + exit 0
+  edge_no_locks:
+    - findLocks returns []; print "no locks" + exit 0
+  error_shape_fail:
+    - lock does not match shape contract; gate=shape; exit 1
+  error_freshness_fail:
+    - last commit on the slice > stamp + grace; gate=freshness; exit 1

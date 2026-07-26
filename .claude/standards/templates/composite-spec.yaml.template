@@ -1,0 +1,126 @@
+# composite spec.yaml — machine-readable contract for a tier-2 composite UI component.
+# Lives at: src/features/<feature>/components/<Composite>/__specs__/spec.yaml
+#       OR  src/components/composites/<Composite>/__specs__/spec.yaml
+# Schema enforced by verify-composite-composition.mjs + verify-composite-state-propagation.mjs.
+#
+# THIN-SPEC DOCTRINE: this file does NOT restate atomic concerns. Cite atomics by path;
+# their __specs__/standards-compliance.yaml at status:locked is the contract you inherit.
+
+spec_version: 1
+component: <CompositeName>
+tier: composite
+package: <package-name>
+folder: <repo-relative-path>
+status: draft
+api_shape: <MUI | DaisyUI | shadcn | custom-justified>
+stakes: <internal | standard | brand>
+
+# ---------- public API ----------
+
+public_api:
+  exports:
+    - <CompositeName>
+    - <iPropsTypeExport>
+  props:
+    <propName>:
+      type: <type>
+      default: <value>
+
+# ---------- consumed atomics (every atomic this composite uses) ----------
+
+consumed_atomics:
+  - path: <repo-relative-path-to-atomic-folder>
+    package: <package-name>
+    locked_sha: <full or short git SHA at the atomic's last status:locked stamp>
+    locked_at: <YYYY-MM-DD>
+    barrel_import: <import { Name } from "@/components/ui/Name">
+    # Get locked_sha for an atomic by:
+    #   git log -1 --format=%H -- <atomic-folder>/__specs__/standards-compliance.yaml
+    # If the atomic's source has commits AFTER locked_sha, verify-cross-tier-freshness
+    # will refuse the composite at pre-commit. Update locked_sha to the new HEAD and
+    # re-run the composite's own verifier chain to re-validate.
+
+# ---------- frozen props (props your composite locks down per atomic) ----------
+
+frozen_props:
+  <atomic-name>:
+    <prop>: <literal-value>
+    # repeat per frozen prop
+
+# ---------- state propagation ----------
+#
+# Every composite-level state that should cascade to a child atomic is declared here.
+# verify-composite-state-propagation.mjs greps source to confirm each rule is implemented.
+
+state_propagation:
+  - composite_state: <e.g. loading | disabled | editing>
+    atomic_target: <name-from-consumed_atomics>
+    prop_set_on_atomic: <prop>
+    value: <literal>
+    condition: <always | when:<expression>>
+
+# ---------- focus orchestration ----------
+
+focus_order_across_atomics:
+  - atomic_target: <name>
+    role_in_composition: <e.g. primary_action | cancel | first_input>
+    focus_event: <on_mount | on_open | on_close | on_submit | sequential_tab>
+
+initial_focus_on_mount: <name-from-consumed_atomics>
+focus_return_on_unmount: <last_focused_before_open | element_by_selector:"..." | n/a — <reason>>
+
+# ---------- composition anatomy (hierarchical sketch of "atomic inside atomic") ----------
+
+composition_anatomy:
+  - atomic: <name>
+    role: <one-line>
+    children:
+      - atomic: <name>
+        role: <one-line>
+
+# ---------- composition ARIA (cite the COMPOSITION pattern, not the atomic patterns) ----------
+
+composition_aria_pattern:
+  pattern_url: <https://www.w3.org/WAI/ARIA/apg/patterns/<slug>/>
+  what_we_use:
+    - <e.g. role="dialog" + aria-modal=true + focus trap + escape-to-close>
+  what_we_skip:
+    - <e.g. aria-labelledby — we use aria-label directly>
+
+# ---------- composition edge cases (interactions BETWEEN atomics; NOT atomic-internal) ----------
+
+composition_edge_cases:
+  - case: <e.g. "primary loading; cancel still works">
+    handling: <what the composite does>
+
+# ---------- optional blocks (include when applicable) ----------
+
+# responsive_behavior: <when composite is layout-affecting>
+# forced_colors_handling: <when composite adds chrome>
+# reduced_motion_handling: <when composite adds transitions>
+# rtl_handling: <when composition direction is asymmetric>
+
+# ---------- deferred (atomics/props NOT shipped at v1) ----------
+
+deferred_composition_additions:
+  - <name>: <reason-or-when-to-ship>
+
+# ---------- stories ----------
+
+stories:
+  - id: Usage
+    intent: realistic composite invocation
+    args: { ... }
+  - id: Playground
+    intent: every composite prop via argTypes; state propagation argTypes wired
+  - id: AllVariants
+    intent: rows showing state propagation cascading to children (loading row, disabled row, etc.)
+    addon_a11y_expected_violations: 0
+
+# ---------- test coverage ----------
+
+test_coverage:
+  rule: per-file 100/100/100/100 on <Composite>.tsx + types.ts + index.ts
+  test_file: <path>/__tests__/<Composite>.test.tsx
+  case_count: tbd at phase-2 close
+  scope_reminder: test composite behavior (state propagation, focus order, edge cases between atomics). Do NOT re-test atomic behavior.

@@ -1,0 +1,39 @@
+flow: main
+kind: helper
+source: verify-mode-cleanup-orphans.mjs
+symbol: main
+inputs:
+  io: optional IO ports — rootDir / findLocks / sliceHasSource / extractFeatureName / readDir / write
+returns:
+  - "{ exitCode: 0, orphans: string[], deadCatalogEntries: Array<{ specPath: string, featureName: string }> }"
+throws: []
+calls:
+  - findAllLocks (scripts/verify-mode-inspect/verify-mode-inspect.mjs)
+  - sliceHasSource (local helper)
+  - extractFeatureName (local helper)
+called_by:
+  - cliMain
+emits_events: []
+side_effects_on_success: ["none — report only"]
+side_effects_on_failure: ["n/a — always exits 0"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: hygiene audit after refactors
+  when_not_to_call: stamp validators / updaters
+  natural_language_examples:
+    - "find orphan locks"
+    - "mode cleanup-orphans"
+  agent_invocation: "internal — `node scripts/verify-mode-cleanup-orphans/verify-mode-cleanup-orphans.mjs`"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "orphan count + catalog mismatch count + per-row listing"
+paths:
+  happy:
+    - findLocks returns N locks
+    - each slice has source (per sliceHasSource); each spec.yaml feature_name matches path; print "clean" + exit 0
+  edge_orphan:
+    - sliceHasSource returns false for one or more slices; print orphan list + exit 0
+  edge_catalog_mismatch:
+    - spec.yaml feature_name doesn't end with the slice's dashed-path; record mismatch + exit 0
+  edge_unreadable_spec:
+    - extractFeatureName returns null on read failure; no mismatch recorded

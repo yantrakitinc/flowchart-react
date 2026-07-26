@@ -1,0 +1,422 @@
+version: 1
+
+# Catalog of every standards file in ~/.claude/standards/.
+# When the agent needs a rule, it reads this index, finds the relevant
+# standard by `scope:`, then opens the .yaml. Detail.md is opened only
+# when the rule's intent isn't obvious from the YAML.
+
+standards:
+  AUTHORIZATION_STANDARDS:
+    md: AUTHORIZATION_STANDARDS.md
+    rationale: AUTHORIZATION_STANDARDS.rationale.md
+    scope: Layer A iAuthorizedPrincipal<TSlug> compile-time + Layer B Postgres RLS runtime + per-feature permission-slug catalog (db/permissions.ts) + central permissions-rules.yaml DSL + two-actor model (users + service_principals) + permission catalog + bootstrap chain
+
+  COMPONENT_CREATION:
+    md: COMPONENT_CREATION.md
+    rationale: COMPONENT_CREATION.rationale.md
+    scope: design-system primitives in src/components/ui/<Name>/ — 5-phase order (design → test → implement → stories → verify) + design.md lock marker + spec.yaml schema + shared state vocabulary (state-hover-*, state-focus-visible, state-disabled, state-loading) + token discipline + cross-variant cva consistency + 4 verifier scripts + pre-commit / pnpm verify / CI enforcement layers
+
+  COMPOSITE_CREATION:
+    md: COMPOSITE_CREATION.md
+    rationale: COMPOSITE_CREATION.rationale.md
+    scope: tier-2 composites (2+ atomics) — thin-spec doctrine + consumed_atomics locked_sha pinning + frozen_props + state propagation + focus order + 6-phase order + feature-local default location + promote-to-shared rule + composite verifiers
+
+  PAGE_CREATION:
+    md: PAGE_CREATION.md
+    rationale: PAGE_CREATION.rationale.md
+    scope: tier-3 pages/surfaces (route | sidepanel | popup | options | embedded) — thin-spec extension + landmark_structure + state_machine + seo_contract + performance_budget + wireframes + error/loading/not-found + page verifiers + blueprint_doc binding
+
+  E2E_TESTING:
+    md: E2E_TESTING.md
+    rationale: E2E_TESTING.rationale.md
+    scope: end-to-end tests — scenario/flow folder tree + UI/API parity + Setup/Actions/Assertions english specs + <flow>.yaml machine contract + placement by shared-truth boundary (mono spanning folder / poly center-of-gravity) + DB-safety (never real/remote, local-or-e2e-db only) + seed strategies (auto/button-wait/human) + run modes + attestations
+
+  GOOGLE_FIREBASE_STANDARDS:
+    md: GOOGLE_FIREBASE_STANDARDS.md
+    rationale: GOOGLE_FIREBASE_STANDARDS.rationale.md
+    scope: Firebase usage (Firestore / Storage / Analytics / Auth) — ZERO client-side SDK + NextAuth+Firebase auth path + project setup + permission-slug authorization (not email allowlists)
+
+  INDUSTRY_STANDARDS_STACK:
+    md: INDUSTRY_STANDARDS_STACK.md
+    rationale: INDUSTRY_STANDARDS_STACK.rationale.md
+    scope: named industry standards catalog — OpenAPI 3.1, AsyncAPI 3.0, OAuth 2.1, OIDC, WebAuthn, Argon2id, PASETO, NIST RBAC, OpenTelemetry, 12-factor, SOC 2, GDPR, OWASP ASVS L2, CIS Benchmarks, CUID2, etc.
+
+  PACKAGE_PROJECT_STANDARDS:
+    md: PACKAGE_PROJECT_STANDARDS.md
+    rationale: PACKAGE_PROJECT_STANDARDS.rationale.md
+    scope: published npm package repos — package/ layout + versioning + prepublish-check + CONFIRMED=1 publish gate + storybook deploy + README
+
+  PROCESS_DISCIPLINE:
+    md: PROCESS_DISCIPLINE.md
+    rationale: PROCESS_DISCIPLINE.rationale.md
+    scope: scope (code only what's asked) + defects (surface, never silently fix) + foundational ordering + DB hygiene + decision boundary (zero executive decisions) + pushback discipline + one-bug-one-PR + refactor-to-testability
+
+  PROJECT_ARCHITECTURE:
+    md: PROJECT_ARCHITECTURE.md
+    rationale: PROJECT_ARCHITECTURE.rationale.md
+    scope: single Next.js app shape (server/client layers, data access behind handlers) + transport-agnostic handlers + SSR-only authorization + gates check permissions never roles + CUID2 for PKs always + soft-delete with redaction + single source of truth via Zod + external/cross-service HTTP-only + phase-1 API+CLI (UI deferred)
+
+  SITE_BLUEPRINT:
+    md: SITE_BLUEPRINT.md
+    rationale: SITE_BLUEPRINT.rationale.md
+    scope: blueprint-before-site ordering — complete markdown site blueprint (docs/site/ — design language + routes/shell + API bindings + per-page docs + per-flow docs + coverage matrix with unmapped_stories 0) required BEFORE any page-tier slice; atomics/composites exempt; blueprint-locked marker + blueprint_lock_mode autonomy + blueprint_doc binding in page spec.yaml + verify-site-blueprint.mjs gate
+
+  STANDARDS_CREATION_STANDARDS:
+    md: STANDARDS_CREATION_STANDARDS.md
+    scope: how to write a standard (two-file Markdown shape <NAME>.md rules + <NAME>.rationale.md why, fenced meta block, NAME#anchor citations, UPPER_SNAKE_CASE naming, what earns its own standard)
+
+  SUPERPOWERS:
+    md: SUPERPOWERS.md
+    rationale: SUPERPOWERS.rationale.md
+    scope: superpowers@claude-plugins-official plugin — slash commands + skill catalog + canonical workflow + output locations + plugin priority rule (standards beat skills)
+
+  TEST_NAMING:
+    md: TEST_NAMING.md
+    rationale: TEST_NAMING.rationale.md
+    scope: the foundation for both testing standards + the test-runner — every test has one stable path-derived ID (unit:<feature-path>/... , e2e:<scenario>/<flow>/<variant>) + e2e/unit/story filenames + seed dataset names + discovery globs + uniqueness rules; enables zero-hand-maintenance auto-discovery + orphan cleanup
+
+  VERCEL_STANDARDS:
+    md: VERCEL_STANDARDS.md
+    scope: Vercel deploy policy — HARD RULE never trigger deploy from local (only path is git merge to main → webhook → Vercel) + preview deployments disabled per project via commandForIgnoringBuildStep + production branch = main + git fork protection + provisioning checklist + audit query
+
+  ACCESSIBILITY:
+    md: ACCESSIBILITY.md
+    rationale: ACCESSIBILITY.rationale.md
+    scope: WCAG 2.2 AA bar, APG pattern requirement, axe test-runner gate, data-axe-exception waivers
+
+  AGENT_AFFORDANCES:
+    md: AGENT_AFFORDANCES.md
+    rationale: AGENT_AFFORDANCES.rationale.md
+    scope: Agent-visible surface — /agents.json + /agents.txt generation, data-testid/data-agent-*/aria-label attrs, action-verb catalog, /llms.txt
+
+  API_SURFACE:
+    md: API_SURFACE.md
+    rationale: API_SURFACE.rationale.md
+    scope: Server-action-to-HTTP parity, /api/v1 versioning, /openapi.json + /docs runtime surfaces, visibility gates + apiMeta
+
+  BRANCHES_AND_COMMITS:
+    md: BRANCHES_AND_COMMITS.md
+    rationale: BRANCHES_AND_COMMITS.rationale.md
+    scope: Branch naming, push bans + nuke path, commit format, AI-attribution ban, per-push user-override scope, release tags
+
+  CODE_DOCUMENTATION:
+    md: CODE_DOCUMENTATION.md
+    rationale: CODE_DOCUMENTATION.rationale.md
+    scope: JSDoc on every export, parent-facing-only audience, inline-comment discipline (zero-default, WHY-only), spec-reference format
+
+  COMPONENT_DOCS:
+    md: COMPONENT_DOCS.md
+    rationale: COMPONENT_DOCS.rationale.md
+    scope: Docs/README/Usage doc entries — readme.mdx + usage.mdx shapes + prop JSDoc powering autodocs
+
+  COMPONENT_FOLDERS:
+    md: COMPONENT_FOLDERS.md
+    rationale: COMPONENT_FOLDERS.rationale.md
+    scope: Component folder shape + barrels, shadcn/ui/features locations, spec-vs-source drift gate
+
+  COMPONENT_LIBRARY_DOCTRINE:
+    md: COMPONENT_LIBRARY_DOCTRINE.md
+    rationale: COMPONENT_LIBRARY_DOCTRINE.rationale.md
+    scope: MUI api shape, shadcn-first primitives, library placement (in-tree vs packages/ui), portability, incremental variants
+
+  DESIGN_TOKENS:
+    md: DESIGN_TOKENS.md
+    rationale: DESIGN_TOKENS.rationale.md
+    scope: Design-token discipline (single owner) — Tailwind v4 + postcss plugin, hardcoded color-shade ban, semantic tokens only
+
+  ENV_VARS:
+    md: ENV_VARS.md
+    rationale: ENV_VARS.rationale.md
+    scope: .env.example/.env.local rules, NEXT_PUBLIC_ discipline, printf-not-echo, admin email lists
+
+  FLOW_CONTRACT:
+    md: FLOW_CONTRACT.md
+    rationale: FLOW_CONTRACT.rationale.md
+    scope: flows/<fn>.flow.yaml — schema + exhaustive path enumeration (happy/error_*/edge_*, KNOWN-NOT-VALIDATED) + error_terminal (every error path ends at a user-facing explanation + alternative when warranted) + set-level journey_completeness (bidirectional — every journey step→flow AND every flow→journey; explained-failure terminal = valid coverage; orphan flow = hard red)
+
+  USER_JOURNEYS:
+    rationale: USER_JOURNEYS.rationale.md
+    md: USER_JOURNEYS.md
+    scope: outside-in user-journey catalog (docs/journeys/) + circular discover→match→reconcile→update loop run BEFORE code — journeys modeled from SaaS domain + peer apps BLIND to our flows (repo-blind journey-cartographer-core subagent) + required provenance + dual-outcome (journey achieved by success OR well-explained failure; failure_outcomes + alternatives) + bidirectional journey↔flow reconciliation (00-INDEX map) + blind traversal audit (flow-traversal-auditor-core walks a domain-only goal using ONLY docs/flows; REPEATED down a likelihood×importance×traffic priority order until unreachable_goals=0 AND priority_goals_uncovered=0) + journeys feed user-locked REQUIREMENTS + verify-journeys.mjs gate
+
+  LABS:
+    rationale: LABS.rationale.md
+    md: LABS.md
+    scope: computer-wide /labs visual sandbox — flow-backed surfaces (bidirectional flow↔labs map, binary; unbacked_surfaces=0 AND uncovered_flows=0) + placement-agnostic (route | separate_app | hybrid, per-project .standards/labs.yaml) + Explore/Refine tiers (Explore free-form, Refine adopts DESIGN_TOKENS+STATE_VOCABULARY) + hard rules (flow-backed, mobile/PWA-first, full real estate, auto-play-able) + feedback protocol (collect+answer, no edits until "apply", triage flow-vs-cosmetic, flows-first-then-UI, YAML tally + generated MD, gate blocks promotion while a flow-affecting item is open) + extended-Mermaid in-app JS/React auto-play player (visual demo not E2E, any browser+mobile, single-origin with flow.yaml, symmetric play/record) + verify-labs.mjs gate
+
+  HEXAGONAL_ARCHITECTURE:
+    md: HEXAGONAL_ARCHITECTURE.md
+    rationale: HEXAGONAL_ARCHITECTURE.rationale.md
+    scope: Services-canonical call graph, thin adapters, typed repositories, DI via injected interfaces + composition roots, outbox vs injected-interface cross-feature communication
+
+  I18N:
+    md: I18N.md
+    rationale: I18N.rationale.md
+    scope: No hardcoded user-facing strings; every label routed through the i18n layer
+
+  ISSUES:
+    md: ISSUES.md
+    rationale: ISSUES.rationale.md
+    scope: GitHub issue discipline — body shape, labels, board membership, standards checklist, pre-create gate, compliance block, audits
+
+  LOCAL_DEV_NETWORK:
+    md: LOCAL_DEV_NETWORK.md
+    rationale: LOCAL_DEV_NETWORK.rationale.md
+    scope: Unique ports, /etc/hosts as source of truth, <project>.<dev-tld> hostnames, package.json alignment
+
+  LOCK_FILES:
+    md: LOCK_FILES.md
+    rationale: LOCK_FILES.rationale.md
+    scope: standards-compliance.yaml schema incl. per-standard 100%/NOT-REQUIRED map, exception.yaml, verify/freshness gates, stamping authority, compliant tag
+
+  LOGGING:
+    md: LOGGING.md
+    rationale: LOGGING.rationale.md
+    scope: Central logger module, level semantics, mandatory tested redaction, logger-vs-audit call-site separation
+
+  MANUAL_FLOWS:
+    md: MANUAL_FLOWS.md
+    rationale: MANUAL_FLOWS.rationale.md
+    scope: manual/<flow>.md adversarial agent scripts — schema, authoring + browser-agent rules, per-app surfaces (results route, dev-data routes, serve pages, storybook QA)
+
+  MOBILE_FIRST:
+    md: MOBILE_FIRST.md
+    rationale: MOBILE_FIRST.rationale.md
+    scope: Small-viewport-first design rule for every UI surface
+
+  MOCKING_DOCTRINE:
+    md: MOCKING_DOCTRINE.md
+    rationale: MOCKING_DOCTRINE.rationale.md
+    scope: DI for code-I-own vs MSW for code-I-don't, module-mock ban, refactor-to-testability
+
+  NAMING:
+    md: NAMING.md
+    rationale: NAMING.rationale.md
+    scope: Symbol/file/key naming — i-prefix types, Class suffix, ALL_CAPS constants, file casing by role, CUID2 primary keys, error-code + data-testid shapes
+
+  NO_THEATER_TESTS:
+    md: NO_THEATER_TESTS.md
+    rationale: NO_THEATER_TESTS.rationale.md
+    scope: The three banned theater patterns with the delete-the-code litmus + two-gate verify/verify:full discipline
+
+  PULL_REQUESTS:
+    md: PULL_REQUESTS.md
+    rationale: PULL_REQUESTS.rationale.md
+    scope: Agent-owned PR lifecycle — six-H2 body shape, no-100%-no-PR gate, per-standard 100%/NOT-REQUIRED stamping, pre-create gate, merge, close
+
+  README_CONTRACT:
+    md: README_CONTRACT.md
+    rationale: README_CONTRACT.rationale.md
+    scope: README.yaml schema + README.md required sections + status lifecycle semantics (planning/shipping/maintained/archived)
+
+  REPO_GATE_INSTALLATION:
+    md: REPO_GATE_INSTALLATION.md
+    rationale: REPO_GATE_INSTALLATION.rationale.md
+    scope: Hook + installer mechanics — pre-push chain incl. stamped-HEAD rule, pre-commit gates, commit-msg anti-fake rule, pr-shape CI, install-slice-gates contract
+
+  REPO_PROVISIONING:
+    md: REPO_PROVISIONING.md
+    rationale: REPO_PROVISIONING.rationale.md
+    scope: GitHub repo / project board / host-provider / third-party pre-setup before any code; installer auto-setup; project-memory capture
+
+  ROOT_LAYOUT:
+    md: ROOT_LAYOUT.md
+    rationale: ROOT_LAYOUT.rationale.md
+    scope: Repo-root folder contract — /docs + /code + README pair, single-app + turborepo trees, Vercel Root Directory
+
+  SCENARIO_ENUMERATION:
+    md: SCENARIO_ENUMERATION.md
+    rationale: SCENARIO_ENUMERATION.rationale.md
+    scope: Walk-the-code-path enumeration of the 11 per-operation scenario categories + STOP-and-surface on unhandled
+
+  SOURCE_COVERAGE:
+    md: SOURCE_COVERAGE.md
+    rationale: SOURCE_COVERAGE.rationale.md
+    scope: Every src file resolves to a spec or .ignore.specs.yaml, feature_name rules, one-operation-per-feature allowlist
+
+  SOURCE_FOLDERS:
+    md: SOURCE_FOLDERS.md
+    rationale: SOURCE_FOLDERS.rationale.md
+    scope: Top-level src/ layout + per-feature sub-folder vocabulary, self-containment, padding-folder ban + verify script
+
+  SPEC_CONTRACT:
+    md: SPEC_CONTRACT.md
+    rationale: SPEC_CONTRACT.rationale.md
+    scope: Per-feature __specs__/ contract — folder layout, spec.yaml/spec.md partition, both schemas, four-concern cross-cutting declaration
+
+  STACK:
+    md: STACK.md
+    rationale: STACK.rationale.md
+    scope: Default framework/library/tooling baseline (Next.js-first) + documented-reason per-project override rule
+
+  STATE_VOCABULARY:
+    md: STATE_VOCABULARY.md
+    rationale: STATE_VOCABULARY.rationale.md
+    scope: Shared state-* utility classes, direct state-variant ban, cross-variant cva consistency, hover shape-to-class map
+
+  STORYBOOK_SETUP:
+    md: STORYBOOK_SETUP.md
+    rationale: STORYBOOK_SETUP.rationale.md
+    scope: Storybook hosting, required addons, .storybook/main.ts + preview.ts wiring, docsView global
+
+  STORYBOOK_TESTING:
+    md: STORYBOOK_TESTING.md
+    rationale: STORYBOOK_TESTING.rationale.md
+    scope: Two-way component coverage (unit test AND Chrome-extension-driven Playground), no-orphan-marker rule, computed-style verification
+
+  STORY_FORMAT:
+    md: STORY_FORMAT.md
+    rationale: STORY_FORMAT.rationale.md
+    scope: Story coverage + Playground/AllVariants/Changelog contracts, sidebar entry cap, action() callback rule
+
+  TEST_STACK:
+    md: TEST_STACK.md
+    rationale: TEST_STACK.rationale.md
+    scope: One tool per testing job (Vitest/Playwright/Puppeteer/MSW/pglite), permission-aware principal minting, layered mock seed data
+
+  TYPESCRIPT_HYGIENE:
+    md: TYPESCRIPT_HYGIENE.md
+    rationale: TYPESCRIPT_HYGIENE.rationale.md
+    scope: TypeScript strict mode, any/ts-ignore bans, ESLint zero-warnings, type co-location + export hygiene with its 3 exceptions
+
+  UNIT_COVERAGE:
+    md: UNIT_COVERAGE.md
+    rationale: UNIT_COVERAGE.rationale.md
+    scope: 100% perFile coverage thresholds, red/green TDD, every-export-tested, e2e-green-required-for-done (authority E2E_TESTING), quoted-proof done-claim
+
+  UTC_TIMESTAMPS:
+    md: UTC_TIMESTAMPS.md
+    rationale: UTC_TIMESTAMPS.rationale.md
+    scope: UTC-only timestamps at every layer — DB column type, connection TimeZone, app-code methods, UI Intl display
+
+  VERIFIER_MODES:
+    md: VERIFIER_MODES.md
+    rationale: VERIFIER_MODES.rationale.md
+    scope: SINGLE OWNER of the full 15-mode verifier catalog + lock state machine + final-push mode-selection prompt
+
+  VERIFY_MANUAL_STORIES:
+    md: VERIFY_MANUAL_STORIES.md
+    rationale: VERIFY_MANUAL_STORIES.rationale.md
+    scope: Per-component Verify-Manual instruction stories + the single Verify-Manual Master page + separation rules
+
+  WRITING_ORDER:
+    md: WRITING_ORDER.md
+    rationale: WRITING_ORDER.rationale.md
+    scope: Three-phase spec-code-verify order, drive-to-green, editing_locked, coverage bar, scope authority, standards-change authority
+
+  DECISION_LOG:
+    md: DECISION_LOG.md
+    rationale: DECISION_LOG.rationale.md
+    scope: user rulings logged append-only (global + per-repo), consulted before ANY question via the pre-ask hook — never re-ask a logged decision; no silent downscoping of directives
+
+  BROWSER_VALIDATION:
+    md: BROWSER_VALIDATION.md
+    rationale: BROWSER_VALIDATION.rationale.md
+    scope: mandatory real-browser UI validation (Chrome extension) wherever UI is touched — manual flows + Playground two-way + Verify-Manual + e2e ui variants + interaction-gated surfaces opened; browser_validated lock stamp; no walk, no stamp
+
+  API_ENVELOPE:
+    md: API_ENVELOPE.md
+    rationale: API_ENVELOPE.rationale.md
+    scope: ONE JSend-shaped response envelope for every API on every site — success/fail/error shapes, correct HTTP status always, mandatory stable codes, single respond() helper, no endpoint exempt
+
+  API_FIRST:
+    md: API_FIRST.md
+    rationale: API_FIRST.rationale.md
+    scope: services ship as APIs before any UI — flows (mermaid) land with each API, every flow E2E-tested, MECHANICAL_COMPLETE.yaml attestation gates page-tier code; design library exempt; any future client (mobile/console/AI) consumes the same endpoints
+
+  REQUIREMENTS_CONTRACT:
+    md: REQUIREMENTS_CONTRACT.md
+    rationale: REQUIREMENTS_CONTRACT.rationale.md
+    scope: requirements finalized WITH the user and user-locked BEFORE autonomous building; three stop-conditions only (all-done / user-only question / assumption-vs-contract); assumption ledger with derivations; no executive decisions
+
+  SELF_HARDENING:
+    md: SELF_HARDENING.md
+    rationale: SELF_HARDENING.rationale.md
+    scope: the learning loop — lessons ledger with mandatory terminals (hardened_by/standard_updated/open), regression corpus (one fixture per learned failure, selftest at pre-commit), weekly self-audit routine, proposal miner (user ratifies)
+
+  CONTEXT_ECONOMY:
+    md: CONTEXT_ECONOMY.md
+    rationale: CONTEXT_ECONOMY.rationale.md
+    scope: context stays lean forever — 6KB gated session-injection budget (names/open-only/pointers), agents read only their standards_used, capped verbatim-only reports, model-fit dispatch
+
+# ---------- Tier-1 hub ----------
+
+tier_1_entry: STANDARDS_ENTRY.md                  # always-needed rules + per-standard router
+
+# ---------- agent ecosystem ----------
+# Locked design: ~/.claude/agents/AGENT_ARCHITECTURE.md.
+# Each agent ships in two files:
+#   <agent>.md       — Claude Code SOP, read inline (full doctrine)
+#   <agent>-core.md  — dispatchable subagent (the 5%); registered via `name:` frontmatter
+
+agents:
+  location: "~/.claude/agents/"
+  architecture_doc: AGENT_ARCHITECTURE.md
+  ecosystem:
+    pm:
+      full: pm.md
+      core: pm-core.md
+      role: project state + orchestration; routes typed commands to specialists
+    feature-spec-writer:
+      full: feature-spec-writer.md
+      core: feature-spec-writer-core.md
+      role: writes per-feature __specs__/spec.yaml + spec.md + flows + manual; locks spec
+    coder:
+      full: coder.md
+      core: coder-core.md
+      role: implements against locked spec; targeted red/green TDD only; never runs full verify chain
+    verifier:
+      full: verifier.md
+      core: verifier-core.md
+      role: 4-mode verifier (A/B inline; C/D subagent); owns the lock stamp
+    github-project-agent:
+      full: github-project-agent.md
+      core: github-project-agent-core.md
+      role: GitHub Issues + Projects mechanics; reads README.yaml for per-repo bindings
+
+  support_agents:                                  # token-cheap precision agents; strict output contracts
+    standards-auditor-core:
+      core: standards-auditor-core.md
+      role: audits the standards tree (meta-linter + no-history + parse sweep + dirty-tree); verbatim output only; haiku
+    standards-reconciler-core:
+      core: standards-reconciler-core.md
+      role: finds contradictions/duplications/stale refs between standards; read-only report with file:line quotes; dispatch before+after editing any standard
+    gate-runner-core:
+      core: gate-runner-core.md
+      role: runs project gates and returns only verbatim final lines + failures; keeps gate spam out of the main session; haiku
+    proposal-miner-core:
+      core: proposal-miner-core.md
+      role: mines DECISIONS + LESSONS for patterns; outputs standard-change proposals with citations; never edits; user ratifies
+    ui-walker-core:
+      core: ui-walker-core.md
+      role: executes real-browser UI walks (Chrome extension) per manual flows + Verify-Manual + Playground two-way; strict verdict report; never stamps
+    journey-cartographer-core:
+      core: journey-cartographer-core.md
+      role: DISCOVER phase of the user-journey loop — generates the outside-in journey catalog (docs/journeys/) from ONLY domain + peer scan; repo-blind by toolset (no Read/Grep/Glob) so it cannot mirror our flows; sonnet
+
+  inline_first_doctrine:
+    rule: Claude Code (active session) executes routine work directly by reading <agent>.md as SOP
+    dispatch_when:
+      - reproducibility exercise (fresh agent given ONLY the locked spec)
+      - parallel independent investigation
+      - bulk / sweep / audit (>5 targets)
+      - heavy verifier modes (C / D)
+    cost_signal: subagent dispatch ~7x inline tokens; reserve for the 5%
+
+# ---------- lookup helpers ----------
+
+how_to_use:
+  rule: open this file first when the agent needs to find a standard or agent
+  procedure:
+    1: for rules → scan standards `scope:` strings; find the standard matching the question; open its `md:` (the rules)
+    2: for agent behavior → open `~/.claude/agents/<agent>.md` (inline SOP) or `<agent>-core.md` (dispatch target)
+    3: open the `rationale:` file only when the rules' intent isn't obvious
+
+# ---------- pairs at-a-glance ----------
+
+count:
+  total_standards: 66                            # registered here; each ships <NAME>.md (rules) + <NAME>.rationale.md (why)
+  md_only_exception: 1                           # STANDARDS_CREATION_STANDARDS (the meta-rule; rules-only, no rationale file)
+  agent_files: 14                                # AGENT_ARCHITECTURE.md + 5 × (<agent>.md + <agent>-core.md) + 3 support *-core.md
+
+last_updated: 2026-07-26T03:13:32Z

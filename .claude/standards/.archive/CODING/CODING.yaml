@@ -1,0 +1,192 @@
+version: 3
+
+# Rationale for every rule: CODING.detail.md.
+
+# ---------- stack (Next.js-first; per-project override allowed with a documented reason) ----------
+
+stack:
+  framework: Next.js (App Router)
+  ui: React + Tailwind v4 (+ @tailwindcss/postcss)
+  language: TypeScript (strict)
+  database: PostgreSQL                          # MongoDB allowed for projects that justify it
+  orm: Drizzle ORM + postgres-js
+  test_db: pglite                               # in-memory Postgres for unit; real Postgres for integration
+  auth_tokens: PASETO v4 (HttpOnly cookie; never JS-readable storage)
+  password_hashing: Argon2id (RFC 9106)
+  logger: Pino
+  package_manager: pnpm
+  override_rule: a project may pick a different stack item if the spec documents the reason
+  see: INDUSTRY_STANDARDS_STACK.yaml            # named-standard catalog
+
+# ---------- TypeScript ----------
+
+typescript:
+  strict: true                                  # strict + strict null checks
+  any: forbidden                                # use `unknown` + narrowing
+  ts_ignore: forbidden                          # both @ts-ignore AND @ts-expect-error (outside __tests__/)
+  eslint: eslint-config-next + zero warnings (not just zero errors)
+
+# ---------- type co-location & export hygiene ----------
+
+types:
+  co_location: types live with the runtime code that owns them
+  banned:
+    - <name>.types.ts
+    - per-folder types.ts for feature-internal types
+  export_rule: only `export` a type/interface/class if another file imports it
+  exceptions:
+    - shared cross-feature contracts → dedicated file (e.g. src/lib/api/result.ts, <feature>/types/domain.ts)
+    - ORM-schema-inferred types → stay as expressions on the schema export
+    - generated types (codegen / CMS) → dedicated dirs
+
+# ---------- documentation in code ----------
+
+docs:
+  jsdoc_required_on: [exported function, exported class, exported type, exported interface]
+  jsdoc_keys: ["@description", "@param", "@returns", "@throws", "@example where helpful"]
+  jsdoc_length: light (1-3 lines); detail lives in the spec
+  jsdoc_audience: |
+    PARENT-FACING ONLY — what the symbol does, what to pass, what comes back.
+    NOT for: history / "what changed" (→ Changelog story for UI; git for the rest);
+    design rationale (→ spec.md); internal mechanics the caller never sees.
+    UI prop interfaces: one-line description + @default + optional @example,
+    nothing more (see UI_COMPONENTS.yaml.jsdoc).
+  banned:
+    - commented-out code (git tracks history)
+    - inline comments explaining WHAT (well-named identifiers do that)
+    - history / changelog narration in JSDoc or comments (UI history → Changelog story; rest → git)
+  inline_comments: default ZERO; only a WHY the code cannot express — hidden constraint, subtle invariant, workaround for a specific bug, non-obvious ordering requirement
+  spec_reference_format: "// see <folder>/__specs__/flows/<fn>.flow.yaml"
+
+# ---------- logging ----------
+
+logging:
+  logger_module: "@/lib/logger"                 # central wrapper
+  banned: console.* in production code paths
+  levels:
+    info: significant business events (resource created, role assigned, multi-step flow completed)
+    debug: step-by-step (function entry/exit, repo query starting) — off by default
+    warn: recoverable issues (rate-limit hit, retry exhausted, deprecated path)
+    error: caught exceptions (pass `err` field for serializer)
+    trace: verbose low-level (raw SQL params, request bodies) — off by default
+  redaction:
+    rule: logger config redacts sensitive values BEFORE persisting → "[REDACTED]"
+    fields_redacted: [passwords, password hashes, tokens, JWTs, session ids, API keys]
+    test_required: redaction config has a test so it can't drift
+  separation:
+    logger: ops diagnostics
+    audit_log: compliance / business events
+    rule: never pollute audit from logging code; one event may produce both, but the call sites are separate
+
+# ---------- naming ----------
+
+naming:
+  interfaces_and_types: prefix `i`              # iUser
+  classes: suffix `Class`                       # AuthServiceClass
+  constants_literal: ALL_CAPS                   # MAX_LOGIN_ATTEMPTS
+  files:
+    components: PascalCase                      # LoginForm.tsx
+    utilities_services_hooks: camelCase or dot-case  # auth.service.ts, useSession.ts
+  primary_keys: CUID2 (@paralleldrive/cuid2)
+  error_codes: "{CATEGORY}_{FEATURE}_{ERROR}"   # ≥ 3 ALL_CAPS segments
+  data_testid: <feature>-<element>-<type>       # ≥ 3 kebab-case segments
+  see_also: AGENT_STANDARDS.yaml (data-agent-action verb catalog)
+
+# ---------- Tailwind ----------
+
+tailwind:
+  version: v4
+  postcss: "@tailwindcss/postcss"
+  banned: hardcoded color-shade classes (text-red-500, bg-zinc-400, etc.)
+  required: semantic tokens defined in globals.css OR opacity-modified named colors (text-white/60)
+
+# ---------- timestamps — UTC only, every layer ----------
+
+timestamps:
+  db_column_type: timestamp with time zone
+  db_connection: TimeZone=UTC
+  app_code: ".toISOString() | .getTime()"
+  banned: ".toLocaleString() — anywhere non-UI"
+  ui_display: 'Intl.DateTimeFormat(locale, { timeZone: "UTC" })'
+
+# ---------- top-level src/ structure (Next.js layout) ----------
+
+top_level_src:
+  app/: Next.js routes ONLY (no logic)
+  components/:
+    shadcn/: shadcn-generated UI primitives
+    ui/: project UI components
+  features/<name>/: feature folders (see per_feature_structure)
+  features/shared/: cross-feature shared schemas / types
+  views/: composed views (multiple features per view)
+  services/: cross-feature service utilities (rare)
+  db/: top-level DB client + RLS context helpers
+  lib/: framework-agnostic libs
+  hooks/: cross-feature React hooks
+  types/: cross-feature TypeScript types
+  constants/: cross-feature constants
+  config/: env config readers
+  utilities/: pure utility functions
+  security/: cross-feature security helpers
+
+# ---------- per-feature folder structure (use only what's needed) ----------
+
+per_feature_structure:
+  rule: a feature uses ONLY the sub-folders it actually needs; README-only "padding" folders are BANNED; each sub-folder PRESENT must contain ≥ 1 .ts/.tsx file with real code; the list below is the allowed vocabulary. A feature is SELF-CONTAINED — its UI, business logic, DB schema, contract surface, audit events, and tests all live inside this folder.
+  enforcement: scripts/verify/verify-no-padding-folders.mjs refuses any sub-folder under src/features/<name>/ with zero .ts/.tsx files (except __specs__/, which holds YAML)
+  sub_folders:
+    components/: per-feature React components + their __tests__/ and __specs__/
+    services/: canonical business logic (service classes/functions) + __tests__/ and __specs__/
+    handlers/: presentation-agnostic entry points (.handler.ts) returning iApiResult<T>; called by actions/, api routes, and any future transport (mobile, CLI)
+    mappers/: DB-row ↔ domain-entity converters + 3rd-party-shape ↔ domain converters
+    db/: Drizzle schema (.schema.ts) + repositories (.repository.ts) + permissions.ts (per-feature slug catalog, TS const array — see AUTHORIZATION_STANDARDS.permission_slug_catalog) + __tests__/ and __specs__/
+    actions/: Next.js Server Actions (.action.ts) — thin adapters delegating to handlers/; client UI calls these
+    api-contract/: OpenAPI registration files (.openapi.ts) — one per HTTP endpoint; each calls registerOpenAPI(...) as a side-effect import; aggregated via per-feature openapi-registrations.ts barrel; consumed at build time to auto-generate /agents.json (see AGENT_STANDARDS)
+    validation/: Zod schemas (FE/BE contract surface)
+    types/: domain types (FE/BE contract surface) — domain.ts
+    audit/: per-feature audit-event keys + payload types — events emitted to the audit log; separate from logger ops events (see logging.separation)
+    mocks/: per-feature MSW handlers + seed.ts fixtures
+    __tests__/: FEATURE-LEVEL integration tests only (cross-file); per-file tests live next to the file
+
+# ---------- architecture — services are canonical ----------
+
+architecture:
+  call_graph: |
+    [Server Action]  ──┐
+    [API Route]   ─────┴─→ [Service] → [Repository] → [DB]
+    [AI chat tool] ────┘            │
+                                    └─→ [Mapper] → UI/domain shape
+  layers:
+    service: canonical business logic
+    server_action: thin adapter — delegates to a service ('use server')
+    api_route: thin adapter — delegates to a service (src/app/api/.../route.ts)
+    repository: typed methods only (findOne, findMany, findById, create, update, delete); NO generic `execute(op, payload)`
+    mapper: DB shape ↔ UI/domain shape; 3rd-party ↔ domain
+  hexagonal:
+    rule: services depend on injected INTERFACES, not concrete implementations
+    every_external_dep_injected: [DB, cache, clock, logger, event publisher, hasher, etc.]
+    return_type: services return plain domain types (NEVER framework shapes like Response / JSX / form state)
+    composition_root: one composition-root.ts per feature; wires concrete adapters into services
+    no_di_container: true
+    no_decorators: true
+    test_root: tests build their own composition root with fake/in-memory adapters
+  cross_feature_communication:
+    fire_and_forget: events via outbox (write event in SAME transaction as data change; worker drains outbox)
+    request_response: injected interface owned by the consuming feature; implemented by providing feature's adapter
+    banned: events for request-response interactions
+
+# ---------- linked standards ----------
+
+see_also:
+  agent_standards: AGENT_STANDARDS.yaml           # spec.yaml / flows / manual / data-* attributes
+  standards_compliance: STANDARDS_COMPLIANCE.yaml # per-feature lock + freshness gate (the only verify script)
+  cross_cutting_concerns: CROSS_CUTTING_CONCERNS.yaml  # WCAG / auth / mobile / i18n
+  industry_standards_stack: INDUSTRY_STANDARDS_STACK.yaml  # named industry standards catalog
+  authorization_standards: AUTHORIZATION_STANDARDS.yaml  # Layer A + Layer B + YAML→RLS DSL + actor model + bootstrap chain
+  process_discipline: PROCESS_DISCIPLINE.yaml     # scope / defects / order / DB hygiene / decision boundary
+
+# ---------- verification ----------
+
+verification: see STANDARDS_COMPLIANCE.yaml       # the only standards-verify script + manual walk
+
+last_updated: 2026-07-11T00:00:00Z

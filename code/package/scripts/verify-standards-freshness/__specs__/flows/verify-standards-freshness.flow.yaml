@@ -1,0 +1,50 @@
+flow: audit
+kind: helper
+source: verify-standards-freshness.mjs
+symbol: audit
+inputs:
+  rootDir: absolute path to walk for __specs__/standards-compliance.yaml files
+  injected: optional IO ports — readFile / listFiles / gitLastCommit
+returns:
+  - "{ checked: number, failures: Array<{ filePath, reason, detail }> }"
+throws: []
+calls:
+  - listFiles
+  - readFile
+  - parseLockFile (from verify-standards-compliance)
+  - checkPresence (from verify-standards-compliance)
+  - checkFreshness (local)
+called_by:
+  - main
+  - test suite (audit-level coverage)
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: __tests__/verify-standards-freshness.test.mjs
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: A human / agent wants to know whether the on-disk locks are still fresh relative to the actual git history (have any feature folders gained commits since the lock was last stamped?).
+  when_not_to_call: For fast local feedback during iteration — use verify-standards-compliance instead.
+  natural_language_examples:
+    - "are the locks stale?"
+    - "any standards freshness drift?"
+    - "run the thorough lock gate"
+  agent_invocation: "internal — not callable from chat; runs via `pnpm verify:full` or `node scripts/verify-standards-freshness/verify-standards-freshness.mjs`"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "report the OK line OR the per-file stale list"
+paths:
+  happy:
+    - read every lock file under rootDir
+    - skip the ones that fail parse / presence (verify-standards-compliance owns that gate)
+    - for each remaining lock, call checkFreshness — if `commit_date - last_validated <= 5min` → fresh
+    - aggregate the per-file failures (empty list = all fresh)
+  error_no_git:
+    - defaultGitLastCommit returns null (git unavailable / not a repo / folder not in history)
+    - checkFreshness treats null as fresh — verify failure can't be the right response to a git-environment problem
+  error_stale:
+    - last git commit touching folder (excluding lock) is > 5min newer than last_validated
+    - record failure with reason="folder modified after last_validated" + detail showing both timestamps
+  error_unparseable_date:
+    - git returns a malformed date string (defensive — shouldn't happen)
+    - record failure with reason="git log returned unparseable date"

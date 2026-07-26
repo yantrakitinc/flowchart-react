@@ -1,0 +1,29 @@
+feature_name: scripts-verify-mode-d
+version: 1
+operation:
+  name: Verifier Mode B — push-time stamp check
+  slug: "(internal)"
+  description: Push-scoped stamp + freshness check. For each lock owned by a slice touched by the current diff against origin/master, asserts shape (status:locked, verified:100%, last_validated valid ISO-8601 UTC) AND git-history freshness (last commit ≤ last_validated + 30min grace). No code execution beyond git log. Pre-push hook gate.
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: pre-push hook OR routine push verification
+  when_not_to_call: per-slice verification (use Mode A) or full repo (Mode D)
+  natural_language_examples:
+    - "run mode B"
+    - "stamp check before push"
+  confirm_before: "none — read-only"
+  summarize_after_success: "Mode B: PASS — all stamps present + valid"
+  summarize_after_failure: "Mode B: FAIL — <count> stamps missing or malformed"
+cross_cutting:
+  wcag: "n/a — CLI"
+  auth: "filesystem only"
+  mobile: "n/a — CLI"
+  i18n: "operator-log English-only"
+links:
+  flows:
+    - flows/main.flow.yaml
+  tests:
+    - __tests__/verify-mode-d.test.mjs

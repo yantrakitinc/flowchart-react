@@ -1,0 +1,460 @@
+version: 2
+
+# Apply/enforce rules only. Rationale lives in UI_COMPONENTS.detail.md.
+
+# ---------- Storybook setup ----------
+
+storybook:
+  required: every project (ask first for tiny projects with < ~15 components)
+  hosting:
+    rule: deploy as subpath of project domain
+    path: <project-domain>/storybook/
+    banned: gh-pages
+
+# ---------- required addons ----------
+
+required_addons:
+  "@storybook/addon-a11y":
+    mode: error                                  # fail on accessibility violations, not just warn
+  "@storybook/addon-controls": {}
+  "@storybook/addon-viewport":
+    presets: [320, 375, 768, 1024, 1440]         # mobile / phablet / tablet / laptop / desktop
+# The `action()` helper ships from the core `storybook/actions` import path —
+# no separate actions package. See `story_file.callback_implementation`.
+
+# ---------- story coverage ----------
+
+story_coverage:
+  rule: every user-rendered component (RSC or client) MUST have a story
+  exceptions:
+    - components built strictly for Storybook demo purposes
+    - components that never render to a user
+  utilities: get stories ONLY when a story clarifies usage
+  storybook_first: a component's story is written and reviewed BEFORE the component is used in a page
+
+# ---------- story file format ----------
+
+story_file:
+  location: ComponentName/__stories__/Component.stories.tsx
+  required_meta_config:
+    - tags: ['autodocs']                            # MANDATORY — turns on the Docs view (autodocs prop table)
+    - title: ui/ComponentName                       # canonical sidebar path
+    - component: ComponentName                      # the imported component reference for autodocs
+  required_stories:
+    1:
+      name: Playground
+      purpose: the interactive surface — FULLY FUNCTIONAL Controls tab + Actions tab
+      controls: "EVERY meaningful prop is controllable via argTypes — nothing important omitted. Object/array (JSON) props MUST use the `object` control; enums → select/radio; booleans → boolean; numbers → number/range. A prop with no usable control is non-compliant."
+      actions: "EVERY callback/event prop is wired with action('<name>') from 'storybook/actions'. NEVER fn() from storybook/test (a test util, not an action logger)."
+      shape: single Story with full args matching defaults + complete argTypes
+    optional_second_story:
+      name: AllVariants
+      when: the component has 2+ variant axes OR distinct states/slots worth showing in a grid
+      shape: |
+        single Story whose render() is a labelled grid covering EVERY meaningful surface:
+          - every variant × color × size cell (cartesian product)
+          - every state row (loading, disabled, fullWidth, invalid, selected, pressed — whatever the component supports)
+          - every slot row (startIcon, endIcon, icon-only, leadingIcon, trailingIcon)
+          - every named pattern from the component's V2 use cases (e.g. Scan CTA, BETA pill, SOON badge)
+        Sections grouped by uppercase tracking-wide headings (e.g. "variant × color × size", "states", "slots", "v2 named patterns").
+      purpose: comprehensive one-page showcase — AllVariants covers every meaningful surface; standalone per-variant stories are forbidden (see cap)
+      anti_pattern: "AllVariants is NOT a 3-cell preview. If the source primitive supports loading, disabled, icons, or any slot — those MUST be shown in AllVariants, or the story is incomplete."
+    required_third_story:
+      name: Changelog
+      required: true
+      rule: |
+        Component history lives HERE — NOT in JSDoc, inline comments, or spec.yaml. A single
+        Story whose render() lists changes newest-first: one row per change, version/date +
+        one-line description. A brand-new component ships a single "v1 — initial" row.
+      shape: |
+        // Inline render — NO dependency on a shared changelog component (would be circular).
+        // newest-first list of { version, date, change }.
+        export const Changelog: Story = {
+          parameters: { controls: { disable: true } },
+          render: () => (
+            <dl>
+              <dt>1.1.0 — 2026-06-13</dt><dd>added size="small"</dd>
+              <dt>1.0.0 — 2026-06-01</dt><dd>initial</dd>
+            </dl>
+          ),
+        };
+      template: ~/.claude/standards/templates/changelog.story.tsx.template
+    docs:
+      name: Docs
+      required: true
+      source: "tags:['autodocs'] — the autodocs Docs view"
+      purpose: "the auto-generated reference: prop table + every story rendered inline"
+    readme:
+      name: README
+      required: true
+      source: "__stories__/<ComponentName>.readme.mdx (see readme_mdx below — 3 required elements)"
+      purpose: "WHAT the component IS — opens with the **What it is** explainer so no component ships half-documented"
+      distinct_from: "Usage — README and Usage are TWO separate doc entries; both required; neither replaces the other"
+    usage:
+      name: Usage
+      required: true
+      source: "__stories__/<ComponentName>.usage.mdx (see usage_mdx below — Meta name + 8 sections)"
+      purpose: "curated, copy-pasteable how-to; surfaced via the docsView:usage global"
+      distinct_from: "README — README and Usage are TWO separate doc entries; both required; neither replaces the other"
+    verify_manual:
+      name: Verify-Manual
+      required: true
+      spec_derived: true
+      is_instructions_only: true   # CRITICAL — see verify_manual_separation below
+      rule: |
+        INSTRUCTIONS ONLY — a SPEC-DERIVED runbook: WHAT the Claude Code Chrome extension tests
+        + WHAT the spec promises. No component render, no results form — prose + a checklist,
+        nothing else. Authored CODE-BLIND from spec.yaml + design.md + __specs__/manual/<flow>.md,
+        so running it validates the component AGAINST the contract AND proves the spec accurate.
+        A flow unwritable from the spec = deficient spec — fix the spec (per AGENT_STANDARDS manual_md).
+      shape: |
+        a Story carrying ONLY the runnable QA instructions (same content as __specs__/manual/<flow>.md):
+          - WHERE to operate: link to this component's Playground story (a specific Showcase story
+            ONLY when Playground genuinely cannot reach a state the spec requires).
+          - WHAT to do: every state/prop/action the SPEC declares, step by step.
+          - WHAT to assert: the spec's MUST / MUST-NOT.
+          - WHERE to record: the single form on the Verify-Manual » Master page (see
+            verify_manual_master). The story MUST state, in words, that the verdict + findings are
+            entered into the Master page form, which POSTs to /api/v1/manual-results/<flow>.
+      forbidden:
+        - rendering the component itself inside the Verify-Manual story (that is Playground's job — never duplicate the render)
+        - an inline verdict / PASS-FAIL / findings / Save form inside the Verify-Manual story (the form lives ONCE, on the Master page)
+        - any code copied from Playground, Showcase, or the Master form — Verify-Manual references them by link, it does not repeat them
+    verify_manual_master:
+      name: Verify-Manual » Master
+      required: true
+      cardinality: exactly ONE per Storybook (a top-level entry, NOT per-component)
+      contents:
+        1: the agent runbook (how to run a verification pass)
+        2: the worklist — every component's Verify-Manual story, linked, one row each
+        3: ONE results form — Component (storyId) selector + Verdict (PASS/FAIL) + Findings + Save — POSTing each saved verdict to /api/v1/manual-results/<flow> (the local-only route)
+      shape: |
+        a single top-level Story `verify-manual--master`. Form controls carry the agent hooks
+        (data-agent-action="verdict-pass|verdict-fail", verdict-findings, save-verdict) so the
+        extension can fill + submit it. Worklist links are generated from the registered stories,
+        not hand-maintained.
+    verify_manual_separation:
+      rule: |
+        Three distinct, non-overlapping homes — never copy one into another:
+          - Playground → the component you OPERATE (live, controllable render). One per component.
+          - Verify-Manual → the spec-derived test INSTRUCTIONS. No render, no form. Points to
+            Playground (operate here) + Master (record here). One per component.
+          - Verify-Manual » Master → the ONE runbook + worklist + results form for the whole library.
+        Only when the spec needs a state Playground cannot reach does a Showcase story carry that
+        state, and Verify-Manual links to it. Showcase is the exception, never the default.
+    showcase:
+      name: Showcase
+      required: false   # OPTIONAL — the ONLY home for any additional stories
+      purpose: composed examples / real-world usages / edge demos that don't belong in AllVariants; keeps extras out of the sidebar as separate top-level entries
+    cap:
+      rule: |
+        A component ships EXACTLY the six required entries — Docs, Usage, Changelog, Verify-Manual,
+        Playground, AllVariants — plus the OPTIONAL Showcase. No standalone per-variant / per-state /
+        per-prop stories: those are rows inside AllVariants, or live under Showcase.
+      forbidden:
+        - stories named after one variant/state/prop ('Outlined', 'Sizes', 'Loading', 'Disabled', 'WithStartIcon')
+        - any sidebar entry beyond the six required + the optional Showcase
+      master_entry: "ONE extra top-level entry exists library-wide: `verify-manual--master` (see verify_manual_master). It is NOT a per-component story and does not count against any component's six-entry cap."
+  callback_implementation: |
+    Use `action()` from the core `storybook/actions` import path (Storybook 9+). NEVER use `fn()`
+    from `storybook/test` — those are test utilities, not action loggers.
+    Example: `import { action } from "storybook/actions"; onClick: action("onClick")`.
+
+# ---------- readme MDX (what the component IS) ----------
+
+readme_mdx:
+  rule: every primitive ships an MDX file at __stories__/<ComponentName>.readme.mdx alongside the .stories.tsx
+  purpose: |
+    The component's README — answers WHAT THE COMPONENT IS and when to reach for it, so no
+    component ships half-documented. DISTINCT from the Usage MDX: README answers "what is this";
+    Usage answers "how do I wire it". Both are required; neither replaces the other.
+  required_elements:
+    1: '<Meta … name="README">'                 # the doc entry is named README in the sidebar
+    2: "# {ComponentName}"                      # H1 = the bare component name (no suffix)
+    3: "**What it is —** …"                     # the mandatory explainer of what the component is
+  scope_guidance: |
+    Short. What the component is, what problem it solves, when to pick it over its siblings.
+    How-to content (install, import, patterns, code blocks) belongs in the Usage MDX, not here.
+
+# ---------- usage MDX (how to use the component) ----------
+
+usage_mdx:
+  rule: every primitive ships an MDX file at __stories__/<ComponentName>.usage.mdx alongside the .stories.tsx
+  purpose: |
+    Storybook surfaces the same primitive in TWO views via the `docsView` global:
+      ?globals=docsView:docs   → autodocs (auto-generated prop table + every story rendered inline)
+      ?globals=docsView:usage  → the usage MDX (how-to with code blocks per pattern)
+    Both share the same story set. DISTINCT from the README MDX (readme_mdx above) — both are
+    required; neither replaces the other.
+  required_meta: '<Meta … name="Usage">'        # names the doc entry Usage in the sidebar — keeps it distinct from README
+  required_sections:
+    1: "# {ComponentName} Usage"                # H1 with brief one-line subtitle on the next line
+    2: "## Installation"                         # the install command (pnpm dlx shadcn or pnpm add)
+    3: "## Import"                               # the canonical import line(s)
+    4: "## Basic Usage"                          # the simplest valid invocation as a code block + live preview
+    5: "## Props"                                # one code block declaring the interface OR a reference to the Docs view
+    6: "## Examples"                             # parent heading, then ONE H3 per documented pattern
+    examples_subsection_shape:
+      - "### {Pattern Name}"                     # e.g. "### Color Variants"
+      - "<one-line prose>"                        # why this pattern; what problem it solves
+      - "<code block>"                            # copy-able snippet of just that pattern
+      - "<Story id=\"<story-id>\" />"             # the live preview, referencing a focused story by id (NOT inline JSX)
+    7: "## Accessibility"                        # bullets listing the a11y guarantees the primitive provides
+    8: "## Design System Integration"            # bullets: tokens consumed, state classes consumed, theming behavior
+  story_reference_format: |
+    Every live preview MUST use Storybook's `<Story>` tag referencing a story id, not inline JSX —
+    this guarantees the MDX renders the SAME component-under-test as the autodocs:
+      <Story id="ui-button--playground" />
+  forbidden_patterns:
+    - inline JSX previews in MDX without backing stories — every preview must reference a Story
+    - encyclopedic prose — keep each pattern's prose to 1-2 sentences max
+    - duplicating the prop table inside the MDX — link to docsView:docs instead OR show a single typedef code block
+    - manual prop tables — autodocs generates this automatically from JSDoc
+  scope_guidance: |
+    Enough prose to teach, not encyclopedic. A pattern needing more than 3 sentences of
+    explanation probably belongs as its own future composite primitive, not a usage example.
+
+# ---------- JSDoc requirement (powers the autodocs prop table) ----------
+
+jsdoc:
+  rule: every public prop on every primitive's iProps interface MUST carry a JSDoc comment
+  scope: |
+    PARENT-FACING ONLY — the prop's meaning, default, and a usage example. NOT history, rationale,
+    or internal mechanics: history → Changelog story (story_file.required_third_story); rationale
+    → spec.md. One-line description + @default + (optional) @example. See CODING.yaml.docs.
+  enforcement_location: types.ts (where the interface lives)
+  shape: |
+    /**
+     * <one-line description of what the parent passes / what it controls>
+     * @default <value or undefined>
+     * @example
+     *   <ComponentName propName="value" />
+     */
+    propName?: <type>;
+
+# ---------- .storybook/main.ts + preview.ts wiring ----------
+
+storybook_config_required:
+  main_ts:
+    - "stories glob MUST include __stories__/*.stories.@(ts|tsx) AND __stories__/*.readme.mdx AND __stories__/*.usage.mdx"
+    - "framework: @storybook/react-vite (or project equivalent)"
+    - "addons: ['@storybook/addon-a11y', '@storybook/addon-docs']  // a11y + docs addons mandatory"
+  preview_ts:
+    a11y_parameter:
+      rule: |
+        `parameters.a11y.test` MUST be set to `"off"`. The pass/fail axe gate lives in
+        `.storybook/test-runner.ts`, NOT in the addon-a11y auto-test — only the test-runner
+        config understands the `data-axe-exception` opt-in attribute.
+      shape: 'parameters: { a11y: { test: "off" } }'
+      effect: addon-a11y's panel stays visible inside Storybook for manual auditing; the gate is the test-runner
+
+# ---------- test-runner (the actual a11y validation gate) ----------
+
+test_runner:
+  rule: every primitive ships a passing `pnpm verify:stories` run before merge
+  scripts:
+    test:stories: "test-storybook --url http://localhost:41495 --maxWorkers=2  // requires SB already running"
+    verify:stories: |
+      start-server-and-test 'storybook dev -p 41495 --no-open --quiet'
+        http://localhost:41495 'test-storybook --url http://localhost:41495 --maxWorkers=2'
+  config_file: ".storybook/test-runner.ts"
+  behavior: |
+    On each story (Playground + AllVariants), test-runner mounts the story in a real Chromium
+    browser, injects axe-core, and runs the WCAG 2.0 A + 2.0 AA + 2.2 AA rule set. Failing rules
+    throw with the offending element's target selector, html, and failureSummary.
+  documented_exceptions:
+    rule: |
+      Brand decisions that intentionally fall below WCAG-AA are opt-in via the
+      `data-axe-exception="<name>"` attribute. The test-runner config maps each attribute value
+      to ONE disabled axe rule; every other rule still runs on the excepted subtree. Every
+      exception is grep-able by searching `data-axe-exception=` across source.
+    schema:
+      "data-axe-exception=<name>":
+        disabled_rule: "<axe rule id>"
+        rationale: "<one-paragraph design call>"
+    initial_exceptions:
+      "v2-severity-saturated":
+        disabled_rule: "color-contrast"
+        rationale: |
+          V2 brand ships saturated severity colors (#ef4444 critical/destructive, #f97316
+          serious, #f59e0b amber CTA) that fall below WCAG AA-normal (4.5:1) at small text.
+          Brand decision — load-bearing for "scan glance" recognition across the extension.
+      "v2-small-target":
+        disabled_rule: "target-size"
+        rationale: |
+          Checkbox size="small" ships at 14px to fit dense scan-config rows. Use ONLY when
+          row spacing physically guarantees ≥ 24px between adjacent targets.
+  enforcement: |
+    `pnpm verify:stories` is part of `pnpm verify`; a failing run = failing verify chain — no
+    merge. Status: `locked` requires a green test-runner run AT THE TIME OF locking, recorded
+    in standards-compliance.yaml.
+
+# ---------- hover state vocabulary (CRITICAL — easy to get wrong) ----------
+
+hover_state_vocabulary:
+  rule: |
+    The state-hover-text* classes ADD `text-decoration: underline` per WCAG 1.4.11 (link-text
+    affordance) — ONLY for inline-text-link-style elements. Button-shaped or icon-shaped
+    triggers MUST NOT underline on hover. Use the right class for the shape:
+  map:
+    "state-hover-text":
+      shape: "inline text link styled as anchor"
+      affordance: "underline on hover (WCAG 1.4.11)"
+      examples: ["<Button variant=\"text\"> styled as link"]
+    "state-hover-text-primary":
+      shape: "inline text link in primary color"
+      affordance: "underline on hover"
+      examples: ["<Button variant=\"text\" color=\"primary\">"]
+    "state-hover-text-error":
+      shape: "inline text link in error color"
+      affordance: "underline on hover"
+      examples: ["<Button variant=\"text\" color=\"error\">"]
+    "state-hover-text-icon":
+      shape: "icon-only button (no text glyph to underline)"
+      affordance: "subtle color/brightness shift on hover; no underline"
+      examples: ["DialogClose × icon, DrawerClose × icon, icon-only Button"]
+    "state-hover-contained":
+      shape: "filled button — already carries a saturated bg color"
+      affordance: "background brightness filter on hover (filter:brightness(0.95))"
+      examples: ["<Button variant=\"contained\" color=\"primary\"> (amber bg)"]
+      WARNING: "INVISIBLE on transparent backgrounds — filter has nothing to filter. Do NOT use on transparent-bg button-shape triggers."
+    "state-hover-outlined":
+      shape: "outlined button — transparent bg with visible border"
+      affordance: "muted bg tint on hover"
+      examples: ["<Button variant=\"outlined\">"]
+    "state-hover-soft":
+      shape: "transparent-bg button-shape trigger WITHOUT a border (ghost button)"
+      affordance: "muted bg tint on hover — like outlined, but the trigger lacks a border so this is the ONLY hover affordance"
+      why_distinct_from_contained: "state-hover-contained uses filter:brightness, invisible on transparent bg. Borderless ghost buttons NEED an explicit bg-tint or they appear non-interactive."
+      examples: ["Tabs trigger (inactive)", "Accordion trigger", "Toggle (default variant)", "ToggleGroup item (default variant)"]
+  forbidden:
+    - "state-hover-text on Tabs/Accordion/Toggle/ToggleGroup/Dialog-close/Drawer-close → those are button-shaped or icon-shaped, NOT inline text links"
+    - "state-hover-contained on TRANSPARENT-BG button-shape triggers (Toggle/Tabs/Accordion default variant) → filter:brightness is invisible there. Use state-hover-soft instead."
+  enforcement: |
+    `verify-component-state-vocab` checks state-* binding consistency within a primitive (no
+    per-variant invention); it does NOT semantically verify shape — that is caller judgment /
+    code review. Heuristic: a trigger bigger than a single line of text is NOT inline — use
+    -contained / -outlined / -text-icon.
+
+# ---------- spec ↔ source drift gate ----------
+
+spec_vs_source_drift_gate:
+  rule: |
+    Every primitive's spec.yaml MUST declare exactly the `state-*` classes and `var(--*)` tokens
+    its source actually uses. Drift in either direction is forbidden:
+      - source uses a class/token not in spec → spec is stale, must update
+      - spec lists a class/token not in source → spec is over-claimed, must trim
+  enforced_by: ~/.claude/standards/scripts/verify/verify-component-spec-vs-source.mjs
+  scope: |
+    For each component folder under <srcRoot>/components/ui/<Name>:
+      - all .ts/.tsx files in <Name>/ (excluding __stories__/__tests__/__specs__)
+      - plus the matching shadcn baseline at <srcRoot>/components/shadcn/<name>.tsx OR
+        <srcRoot>/components/shadcn/<dashed-name>.tsx (the UI re-export inherits its
+        classes/tokens from there)
+    Stories and tests are demo/test surfaces, NOT the primitive's API; they don't constrain the spec.
+  sentinel: |
+    `state_classes_consumed: ["n/a — <reason>"]` is honored when the source legitimately consumes
+    ZERO state-* classes (Tooltip, Progress, Alert, etc.). Tokens have NO sentinel — strict.
+  pre_commit_position: |
+    Wired into pre-commit between `verify-component-spec-matrix-completeness` and
+    `verify-component-stakes-honest`. Also chained into `pnpm verify:ui`.
+
+# ---------- component folder pattern ----------
+
+component_folder:
+  shape: |
+    ComponentName/
+    ├── ComponentName.tsx
+    ├── (SubComponent.tsx)               # for compound components (e.g., List + ListItem)
+    ├── types.ts
+    ├── index.ts                         # MANDATORY barrel
+    ├── __tests__/
+    │   └── ComponentName.test.tsx
+    ├── __stories__/
+    │   ├── ComponentName.stories.tsx       # Playground + AllVariants + Changelog (max 3; never more)
+    │   ├── ComponentName.readme.mdx        # README doc entry: what the component IS
+    │   └── ComponentName.usage.mdx         # Usage doc entry: how to use it; references stories by id
+    └── __specs__/                       # AI-facing landing zone
+        ├── spec.yaml                    # machine-readable IMPLEMENTATION contract ONLY
+        ├── spec.md                      # human prose: concept + exploration + decisions (the narrative)
+        ├── flows/<fn>.flow.yaml         # per exported function
+        ├── manual/<flow>.md           # browser-executable agent script
+        │                                # Start: Storybook story URL (Usage / Playground / specific variant)
+        │                                # NOT the app URL
+        ├── exception.yaml               # OPTIONAL — opt-in standards waiver (see STANDARDS_COMPLIANCE.exception_file)
+        └── standards-compliance.yaml    # status + verified + last_validated + feature (4 fields, nothing more)
+  rules:
+    - index.ts is mandatory (the barrel)
+    - "import from folder name: `import { List, ListItem } from '@/components/ui/List'`"
+    - never import from individual files
+    - compound components share one folder; each sub-component gets its own .tsx + .test.tsx + .stories.tsx
+    - compound sub-components get their own __specs__/manual/<flow>.md files when their flows differ
+  see: AGENT_STANDARDS.yaml + STANDARDS_COMPLIANCE.yaml
+
+# ---------- component library doctrine ----------
+
+component_library:
+  api_shape: MUI prop names + types + behavior
+  internal_styling: Tailwind + DaisyUI semantic tokens
+  primitives:
+    first_choice: shadcn
+    custom: build only when shadcn truly doesn't cover
+  library_location:
+    single_app_project: in-tree at src/components/ui/
+    monorepo_multi_consumer: |
+      a shared workspace package (e.g., packages/ui) when 2+ apps in the repo consume the same
+      design system. The package mirrors the standard internal layout
+      (packages/ui/src/components/ui/ + src/components/shadcn/) so every UI gate applies
+      unchanged when run with the package as its root. Storybook lives with the package.
+  shared_design_system_rule:
+    rule: a design system consumed by 2+ apps in one monorepo lives in ONE shared workspace package — never hand-duplicated across apps. A single-app project keeps it in-tree at src/components/ui/.
+    portability_preserved: the package ships components that consume CSS vars ONLY — no bundled token values; each consuming app supplies tokens via its own globals.css (the same theme-agnostic contract the in-tree portability rule enforces, so a workspace package satisfies it identically)
+    verify_wiring: the UI-components gate runs against the package root (packages/ui) as a workspace target
+  cross_repo_published_exception: a project MAY also publish a focused npm package (e.g., a cross-project icon catalog) for cross-REPO reuse with its own publish cycle; document in that project's memory, not here
+
+# ---------- portability ----------
+
+portability:
+  rule: |
+    The design system (in-tree src/components/ui/ OR a shared packages/ui) MUST be portable —
+    copy-pasteable / installable into another project with zero edits, consuming CSS vars only
+    with zero project-specific imports
+  banned_imports_from_ui:
+    - project-specific paths (@/lib/<project>, @/features/<feature>)
+    - any module that depends on the host project's specific state
+  theme: applied via destination project's globals.css; UI components consume CSS vars only
+
+# ---------- variants ----------
+
+variants:
+  tools:
+    - cva (class-variance-authority)
+    - tailwind-variants
+  rule: build variants incrementally; only what's currently needed; extend as required
+  banned: implementing all possible variants up front (anticipation)
+
+# ---------- Tailwind tokens ----------
+
+tailwind_tokens:
+  rule: components use ONLY semantic tokens from project's globals.css
+  examples_allowed: [text-foreground, text-muted, bg-surface, bg-destructive, text-white/60]
+  banned: hardcoded color-shade classes (text-red-500, bg-gray-100, etc.)
+  see: CODING.yaml.tailwind
+
+# ---------- where components live ----------
+
+component_locations:
+  src/components/shadcn/:
+    contents: shadcn auto-generated primitives
+    edit_rule: NEVER manually edit; regenerate via shadcn CLI
+  src/components/ui/:
+    contents: design-system components (MUI-shaped, Tailwind/DaisyUI-styled)
+    portable: true
+  src/features/<name>/components/:
+    contents: feature-specific components
+    portable: false (may import feature-internal modules)
+  monorepo_shared_package:
+    contents: in a monorepo with 2+ consuming apps, the shadcn/ + ui/ layers live in the shared workspace package (packages/ui/src/components/{shadcn,ui}/); features/<name>/components/ stays per-app
+  story_rule_applies_to_all: true
+
+last_updated: 2026-07-11T00:00:00Z
