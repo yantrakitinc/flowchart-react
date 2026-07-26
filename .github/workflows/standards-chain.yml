@@ -25,6 +25,8 @@ jobs:
       - name: gates need strict YAML parsing
         run: pip3 install --quiet pyyaml
       - run: pnpm install --frozen-lockfile
+      - name: chromium for the storybook a11y test-runner (verify:stories)
+        run: pnpm exec playwright install --with-deps chromium
       - name: full verify chain (typecheck + lint + gates, receipt last)
         run: pnpm verify
       - name: coverage (100 perFile enforced)

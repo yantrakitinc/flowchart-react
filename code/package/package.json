@@ -30,8 +30,9 @@
     "prepublishOnly": "pnpm build",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "STORYBOOK_BASE=/flowchart-react/ storybook build -o storybook-static",
-    "test:stories": "test-storybook",
-    "verify:stories": "pnpm test:stories",
+    "test:stories": "test-storybook --url http://127.0.0.1:41495 --maxWorkers=2",
+    "verify:stories": "start-server-and-test 'storybook dev -p 41495 --no-open --quiet' http://127.0.0.1:41495 'pnpm test:stories'",
+    "e2e": "node -e \"console.log('no e2e scope — rendering primitive; E2E_TESTING: NOT REQUIRED (see src/react/__specs__/standards-compliance.md)')\"",
     "verify": "pnpm typecheck && pnpm lint && pnpm test:run && node scripts/verify-all.mjs && pnpm verify:stories"
   },
   "peerDependencies": {
@@ -65,6 +66,7 @@
     "puppeteer": "^25.3.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "start-server-and-test": "^2.0.13",
     "storybook": "^8.6.18",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0",
