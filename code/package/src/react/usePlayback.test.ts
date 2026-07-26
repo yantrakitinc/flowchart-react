@@ -157,6 +157,35 @@ describe('usePlayback — manual controls', () => {
     expect(result.current.index).toBe(0);
   });
 
+  it('resumes auto-advancing after a manual step then play (no freeze)', () => {
+    // Regression: stepForward/stepBack (which pause) followed by play must resume
+    // ticking. The step controls clear the pending timer synchronously; play must
+    // re-arm it rather than leaving `playing` true with a frozen index.
+    const { result } = renderHook(() => usePlayback(PATH, { speedMs: 1000 }));
+    act(() => result.current.stepForward()); // -> index 1, paused
+    act(() => result.current.stepBack()); // -> index 0, paused
+    expect(result.current.index).toBe(0);
+    expect(result.current.playing).toBe(false);
+
+    act(() => result.current.play());
+    expect(result.current.playing).toBe(true);
+    act(() => vi.advanceTimersByTime(1000));
+    expect(result.current.index).toBe(1);
+    act(() => vi.advanceTimersByTime(1000));
+    expect(result.current.index).toBe(2);
+  });
+
+  it('toggle from playing to paused clears the pending tick (no extra step)', () => {
+    const { result } = renderHook(() => usePlayback(PATH, { speedMs: 1000 }));
+    act(() => result.current.toggle()); // play
+    expect(result.current.playing).toBe(true);
+    act(() => vi.advanceTimersByTime(500)); // partway to the next tick
+    act(() => result.current.toggle()); // pause before the tick fires
+    expect(result.current.playing).toBe(false);
+    act(() => vi.advanceTimersByTime(5000));
+    expect(result.current.index).toBe(0);
+  });
+
   it('resets index/playing (in the same render) when the path prop itself changes', () => {
     const OTHER_PATH: iFlowPath = { ...PATH, id: 'path-1', nodeIds: ['x', 'y'] };
     let currentPath: iFlowPath = PATH;

@@ -119,11 +119,12 @@ export const ClickNodeForScreen: Story = {
             borderRadius: 12,
             padding: 16,
             fontFamily: 'system-ui',
+            background: '#fff',
           }}
         >
-          <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#a1a1aa' }}>Screen for node</div>
+          <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#52525b' }}>Screen for node</div>
           <div style={{ fontSize: 16, fontWeight: 600, marginTop: 6 }}>{screen}</div>
-          <p style={{ fontSize: 12, color: '#71717a', marginTop: 12 }}>
+          <p style={{ fontSize: 12, color: '#52525b', marginTop: 12 }}>
             Wire a real screenshot/route here off <code>onNodeClick</code>.
           </p>
         </div>

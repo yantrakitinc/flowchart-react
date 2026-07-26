@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "flow": "select-path",
+  "nonce": "d285e6b22d8860f036",
+  "walkedAt": "2026-07-26T22:49:48.738Z",
+  "ok": true,
+  "observed": [
+    {
+      "step": 1,
+      "action": "load Path Detection story (dedicated 3-path branching chart: neutral/error/warning), confirm drawer",
+      "observed": "fc-path-drawer present with 3 items (fc-path-path-0/1/2), all aria-pressed=false initially",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "click first path item (Path 1 / neutral)",
+      "observed": "fc-path-path-0 aria-pressed became 'true'; on-path nodes (start,cart,pay,ship,done) got class fc-node--on-path opacity 1; off-path nodes (fail,hold) got fc-node--dimmed opacity 0.25",
+      "verdict": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "click same path item again (deselect)",
+      "observed": "all 3 items aria-pressed='false'; all node classes reverted to plain (no --on-path/--dimmed suffix remaining)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "click Path 2 then immediately click Path 3 (rapid re-select)",
+      "observed": "final DOM state: fc-path-path-2 aria-pressed='true', path-0 and path-1 both 'false' - exactly one item pressed, never two simultaneously observed",
+      "verdict": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "set selectedPathId control (controlled prop) to 'path-does-not-exist'",
+      "observed": "no crash, fc-flowchart class unchanged (no error class); all drawer items aria-pressed='false'; all node classNames clean (no dimmed/on-path) - clean fallback to nothing-selected",
+      "verdict": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "select Path 1 (real, uncontrolled selection), then switch chart control to a completely different 3-node diagram (flowchart LR Alpha-->Beta-->Gamma)",
+      "observed": "new diagram rendered (x/y/z nodes = Alpha/Beta/Gamma), single auto-detected path 'path-0' aria-pressed=true, all 3 new nodes carry fc-node--on-path (uniform, none dimmed) - no stale highlight referencing old node ids (start/cart/pay/...) lingered, no thrown error",
+      "verdict": "PASS"
+    }
+  ],
+  "walker": "ui-walker",
+  "signature": "d16f8bb6e6f9eb1089edbd64086541df89d61233c0cfdfcd036ad05094edb992"
+}

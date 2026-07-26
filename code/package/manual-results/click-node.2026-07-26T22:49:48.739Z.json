@@ -1,0 +1,53 @@
+{
+  "v": 1,
+  "flow": "click-node",
+  "nonce": "fdd113bb0a02e0abca",
+  "walkedAt": "2026-07-26T22:49:48.739Z",
+  "ok": true,
+  "observed": [
+    {
+      "step": 1,
+      "action": "click body of 'Visitor' node (id=s, no expand button present) on Author With Object story",
+      "observed": "Actions panel logged onNodeClick: (2) [\"s\", Object]; confirmed via DOM query no [data-testid=fc-node-s-expand] exists for this node",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "click body of 'Fill form' node (id=form, HAS expand button)",
+      "observed": "Actions panel logged onNodeClick: (2) [\"form\", Object] - same as step 1 behavior",
+      "verdict": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "click the expand button (+) on 'Fill form' node at its precise coordinates (verified via getBoundingClientRect)",
+      "observed": "aria-expanded flipped false->true; description text 'Email + password' became visible; Actions panel total count stayed at 3 (badge (2) on the form onNodeClick row, unchanged from before this click) confirming onNodeClick did NOT fire again for the expand click",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "click the expand button again (collapse)",
+      "observed": "aria-expanded flipped true->false; node.textContent no longer includes 'Email' (description hidden)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "triple-click (rapid 3x) the expand button in quick succession",
+      "observed": "ended in one deterministic state: aria-expanded='true' (odd number of toggles from false), exactly 1 description block in the DOM (no duplication), read_console_messages(onlyErrors) returned no errors",
+      "verdict": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "left_click_drag from 'Visitor' node center to a point 200px away (attempt to move a single node)",
+      "observed": "node 's' position shifted, BUT all 6 other nodes shifted by the identical delta and retained identical relative spacing (114.75px uniform gaps) - confirms this was a whole-canvas PAN (React Flow default pane-drag), not an individual node drag; nodesDraggable is disabled, no node moved relative to the diagram",
+      "verdict": "PASS"
+    },
+    {
+      "step": 7,
+      "action": "drag from node 's' bottom connection handle to node 'v' top connection handle (simulate connect gesture)",
+      "observed": "edge count before=6, after=6 (rf__edge-e0..e5 unchanged) - no new edge created; nodesConnectable disabled",
+      "verdict": "PASS"
+    }
+  ],
+  "walker": "ui-walker",
+  "signature": "0cca61507b714cf7dba3380b69569e1d1649ddf19fcbe16baae309078e5f70fa"
+}

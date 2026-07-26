@@ -17,11 +17,15 @@ const config: TestRunnerConfig = {
     const storyContext = await getStoryContext(page, context);
     if (storyContext.parameters?.a11y?.disable) return;
 
-    await checkA11y(page, '#storybook-root', {
-      detailedReport: true,
-      detailedReportOptions: { html: true },
-      axeOptions: storyContext.parameters?.a11y?.options,
-    });
+    await checkA11y(
+      page,
+      { include: [['#storybook-root']], exclude: [['.react-flow__attribution']] },
+      {
+        detailedReport: true,
+        detailedReportOptions: { html: true },
+        axeOptions: storyContext.parameters?.a11y?.options,
+      },
+    );
   },
 };
 

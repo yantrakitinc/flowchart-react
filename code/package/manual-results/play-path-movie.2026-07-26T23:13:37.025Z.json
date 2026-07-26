@@ -1,0 +1,65 @@
+{
+  "v": 1,
+  "flow": "play-path-movie",
+  "nonce": "965a500f51a82b8562",
+  "walkedAt": "2026-07-26T23:13:37.025Z",
+  "ok": true,
+  "observed": [
+    {
+      "step": 1,
+      "action": "load Movie Mode story via iframe URL (autoPlay=false, loop=false); confirm baseline transport bar",
+      "observed": "fc-playback bar present; fc-playback-play shown and fc-playback-pause ABSENT (stopped); count=\"1 / 5\"; step-forward/step-back/restart all present",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "click Play; observe count + active node via MutationObserver until end",
+      "observed": "Play replaced by Pause; count advanced 1->2->3->4->5 in sync with active node Order placed->Review cart->Payment OK?->Ship order->Delivered; auto-paused (Play reappeared) on reaching 5/5",
+      "verdict": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "ADVERSARIAL: 5 fresh trials, Play then Pause ~140ms before the next scheduled tick (near tick boundary); wait 2x interval and re-read count",
+      "observed": "all 5/5 trials: count held at its at-pause value with NO extra step after Pause (atPause==after every trial), Play reappeared each time (allPaused=true, anyLeak=false). The pre-fix stale-in-flight-timer leak no longer reproduces: pause clears the pending tick synchronously.",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "from paused, click Step Forward repeatedly past the end",
+      "observed": "count increases exactly +1 per click, clamps at \"5 / 5\", playback stays paused (no auto-resume)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "from a non-zero index, click Step Back repeatedly past the start",
+      "observed": "count decreases exactly -1 per click, clamps at \"1 / 5\", playback stays paused",
+      "verdict": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "ADVERSARIAL (compound): Step Forward then Step Back (both pause) then click Play",
+      "observed": "Play engaged (Pause shown, playing=true) AND playback RESUMED: count 1/5 -> 4/5 over 2x interval. The pre-fix permanent freeze (playing=true but count stuck at 1/5) no longer reproduces: play after a manual step re-arms the timer.",
+      "verdict": "PASS"
+    },
+    {
+      "step": 7,
+      "action": "let playback run to completion WITHOUT loop",
+      "observed": "on reaching the last node the Play button reappeared (auto-paused); count held at \"5 / 5\"; no further auto-advance",
+      "verdict": "PASS"
+    },
+    {
+      "step": 8,
+      "action": "ADVERSARIAL: rapid-fire Play/Pause/Play/Restart within ~1s",
+      "observed": "no crash, no stuck control; ended coherent (exactly one of Play/Pause shown, exactlyOneControl=true; count=\"2 / 5\", playing). No doubled advance-rate.",
+      "verdict": "PASS"
+    },
+    {
+      "step": 9,
+      "action": "ADVERSARIAL: while playback actively running (count \"2 / 5\"), click a DIFFERENT path (Path 2 / error) in the drawer",
+      "observed": "playback immediately reset to \"1 / 5\", paused; exactly 1 node carried fc-node--active (new path first node), no lingering old-path highlight, no continued advance of the old path",
+      "verdict": "PASS"
+    }
+  ],
+  "walker": "ui-walker",
+  "signature": "187749c37d118f27c27c87c193f016905e4c9af9e12bcf2d49e54afc3b32ea06"
+}

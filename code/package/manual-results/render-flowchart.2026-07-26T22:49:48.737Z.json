@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "flow": "render-flowchart",
+  "nonce": "e99d67f744aebeb39e",
+  "walkedAt": "2026-07-26T22:49:48.737Z",
+  "ok": true,
+  "observed": [
+    {
+      "step": 1,
+      "action": "load default valid chart (Author With Text story, hard-reloaded after CSS fix)",
+      "observed": "fc-flowchart rendered, no error class; React Flow canvas visible with 7 nodes (Order placed, Review cart, Payment OK?, Ship order, Payment failed, Manual review, Delivered)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "action": "edit chart control to malformed text 'this is not a valid flowchart line at all !!!'",
+      "observed": "fc-flowchart class became 'fc-flowchart fc-flowchart--error'; fc-parse-error present role=alert text='Flowchart parse error missing header (expected \"flowchart <DIR>\") (line 1)'; reactFlowPresent=false",
+      "verdict": "PASS"
+    },
+    {
+      "step": 3,
+      "action": "set chart='flowchart TD\\n a([AlphaNode])-->b[BetaNode]' AND graph={id:gammaflow,nodes:[GammaNode,DeltaNode],edges:[gamma->delta]} simultaneously via raw JSON control editor",
+      "observed": "DOM query of .react-flow__node returned exactly ['AlphaNode','BetaNode'] - chart rendered, graph object (confirmed present via URL args graph.nodes[0].label:GammaNode) NOT rendered - chart-over-graph precedence confirmed",
+      "verdict": "PASS"
+    },
+    {
+      "step": 4,
+      "action": "set chart control to empty string ''",
+      "observed": "fc-flowchart--error class applied; fc-parse-error role=alert text='Flowchart parse error empty diagram (line 1)'; nodeCount=0; no thrown/uncaught error (option a: parse-error box)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 5,
+      "action": "with valid chart loaded (2-node Alpha/Beta), set Storybook viewport to 'Small mobile' (320px) via viewport addon - genuine fresh-mount narrow render",
+      "observed": "iframe innerWidth=320; fc-canvas width=305 (NOT 0), computed minHeight=260px honored, overflowX=hidden on fc-flowchart; body.scrollWidth=307 vs clientWidth=305 (no real horizontal overflow, 2px box-model rounding only)",
+      "verdict": "PASS"
+    },
+    {
+      "step": 6,
+      "action": "read_console_messages(onlyErrors=true) after fresh hard-reload replay of steps 1-5 on the same tab",
+      "observed": "'No console errors or exceptions found for this tab'",
+      "verdict": "PASS"
+    }
+  ],
+  "walker": "ui-walker",
+  "signature": "ab8b3efc59d31f5e5b91f21a56f6b645f4bd0be2af1e5ef559c2473f90ef6dd6"
+}

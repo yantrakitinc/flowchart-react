@@ -40,6 +40,13 @@ export interface iUsePlaybackResult {
  * `setTimeout` chain advances `index` through `path.nodeIds` every `speedMs` while
  * `playing`. Reaching the last node either loops back to `0` (`opts.loop`) or
  * pauses and fires `opts.onEnd`. Passing `path: null` makes every control a no-op.
+ *
+ * The pending tick is held in a ref and cleared **synchronously** by every control
+ * that stops or reseeks playback (`pause`, `toggle`-to-paused, `stepForward`,
+ * `stepBack`). `useEffect` cleanup runs asynchronously after paint, so relying on
+ * it alone let a tick scheduled inside that window fire after a pause (one extra
+ * step), and let a rapid step→play interleave leave the live timer cleared while
+ * `playing` stayed true (frozen). Clearing in the click handler closes both races.
  */
 export function usePlayback(path: iFlowPath | null, opts: iUsePlaybackOptions = {}): iUsePlaybackResult {
   const { speedMs = 1200, loop = false, onStep, onEnd } = opts;
@@ -47,6 +54,14 @@ export function usePlayback(path: iFlowPath | null, opts: iUsePlaybackOptions = 
   const [playing, setPlaying] = useState(false);
   const [index, setIndex] = useState(0);
   const [trackedPath, setTrackedPath] = useState(path);
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   let resolvedIndex = index;
   let resolvedPlaying = playing;
@@ -74,8 +89,13 @@ export function usePlayback(path: iFlowPath | null, opts: iUsePlaybackOptions = 
   }, [index, path]);
 
   useEffect(() => {
-    if (!playing || !path || path.nodeIds.length === 0) return;
-    const timer = setTimeout(() => {
+    if (!playing || !path || path.nodeIds.length === 0) {
+      clearTimer();
+      return;
+    }
+    clearTimer();
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
       const atEnd = index >= path.nodeIds.length - 1;
       if (!atEnd) {
         setIndex(index + 1);
@@ -88,20 +108,26 @@ export function usePlayback(path: iFlowPath | null, opts: iUsePlaybackOptions = 
       setPlaying(false);
       onEndRef.current?.();
     }, speedMs);
-    return () => clearTimeout(timer);
-  }, [playing, index, path, speedMs, loop]);
+    return clearTimer;
+  }, [playing, index, path, speedMs, loop, clearTimer]);
 
   const play = useCallback(() => {
     if (!path || path.nodeIds.length === 0) return;
     setPlaying(true);
   }, [path]);
 
-  const pause = useCallback(() => setPlaying(false), []);
+  const pause = useCallback(() => {
+    clearTimer();
+    setPlaying(false);
+  }, [clearTimer]);
 
   const toggle = useCallback(() => {
     if (!path || path.nodeIds.length === 0) return;
-    setPlaying((value) => !value);
-  }, [path]);
+    setPlaying((value) => {
+      if (value) clearTimer();
+      return !value;
+    });
+  }, [path, clearTimer]);
 
   const restart = useCallback(() => {
     if (!path) return;
@@ -110,15 +136,17 @@ export function usePlayback(path: iFlowPath | null, opts: iUsePlaybackOptions = 
 
   const stepForward = useCallback(() => {
     if (!path) return;
+    clearTimer();
     setPlaying(false);
     setIndex((current) => Math.min(current + 1, Math.max(path.nodeIds.length - 1, 0)));
-  }, [path]);
+  }, [path, clearTimer]);
 
   const stepBack = useCallback(() => {
     if (!path) return;
+    clearTimer();
     setPlaying(false);
     setIndex((current) => Math.max(current - 1, 0));
-  }, [path]);
+  }, [path, clearTimer]);
 
   const currentNodeId = path ? path.nodeIds[resolvedIndex] ?? null : null;
 

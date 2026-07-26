@@ -169,7 +169,7 @@
 .fc-path-drawer-item--selected { border-color: var(--fc-drawer-border); background: #fff; font-weight: 600; }
 .fc-path-drawer-dot { width: 9px; height: 9px; border-radius: 999px; flex: 0 0 auto; }
 .fc-path-drawer-name { flex: 1 1 auto; }
-.fc-path-drawer-type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #71717a; }
+.fc-path-drawer-type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fc-drawer-text); }
 
 /* ---- Playback controls ---- */
 .fc-playback {
@@ -193,7 +193,7 @@
 }
 .fc-playback-count {
   margin-left: auto;
-  color: #71717a;
+  color: var(--fc-drawer-text);
   font-variant-numeric: tabular-nums;
 }
 
