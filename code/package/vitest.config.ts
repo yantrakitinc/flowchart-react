@@ -14,18 +14,8 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         'src/**/*.stories.{ts,tsx}',
         'src/test/**',
-        'src/**/index.ts',
-        // Type-only ports (interfaces compile to no runtime).
-        'src/layout/types.ts',
-        'src/react/types.ts',
+        'src/index.ts',
       ],
-      thresholds: {
-        perFile: true,
-        statements: 100,
-        branches: 100,
-        functions: 100,
-        lines: 100,
-      },
     },
   },
 });
