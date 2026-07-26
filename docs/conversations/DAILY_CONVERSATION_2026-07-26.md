@@ -60,3 +60,18 @@ Rebuild pipeline (issue #4, branch `feat/0004-v2-mermaid-flowchart`): provision 
 code (coder-core, in progress) → per-feature specs (backfill `.md`) → journeys reconcile →
 node-UI design locks → verifier Mode A + `pnpm verify` green → PR. Design is the ratified one
 in `docs/decisions/DECISIONS.yaml` (React Flow + pluggable dagre/ELK + Mermaid-like DSL).
+
+## Movie-mode playback fix + browser re-walk (evening)
+
+The full play-path-movie browser walk (Chrome extension, MutationObserver-timed) caught two
+real movie-mode races the unit suite's synchronous fake-timers could not reproduce:
+1. Pause shortly before a tick let ONE extra step advance (in-flight `setTimeout` was owned only
+   by `useEffect` cleanup, which React runs async after paint).
+2. Step-forward/back then Play left playback frozen (playing=true, index stuck).
+
+Fix (`src/react/usePlayback.ts`): hold the pending tick in a ref and clear it SYNCHRONOUSLY inside
+`pause`/`toggle`-to-paused/`stepForward`/`stepBack`. Added two regression tests (162 total, 100%
+perFile coverage held). Re-walked all 9 flow steps green — 5/5 near-tick pause trials no longer
+leak, step→play resumes, rapid-fire + path-switch coherent. Fresh walker-signed receipt written;
+`src/react` re-stamped `browser_validated`. A/B-confirmed the ~2× cadence seen in automation is
+pre-existing background-tab timer throttling, not a code regression. Full `pnpm verify` green.
