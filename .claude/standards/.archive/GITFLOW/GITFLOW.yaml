@@ -1,0 +1,257 @@
+version: 2
+
+# Rationale lives in GITFLOW.detail.md. This file carries only what an agent
+# needs to APPLY and ENFORCE.
+
+# ---------- issues ----------
+
+issues:
+  required: every code change ships under a GitHub issue
+  body_template:
+    - "## Description"
+    - "## Acceptance criteria"
+    - "## Standards checklist"          # itemized, tickable, per-standard — see standards_checklist
+    - "## Technical notes"
+    - "## Related issues"
+  labels:
+    type: one of [epic, story, bug, enhancement, docs, chore]
+    status: one of [in-progress, blocked, done]
+    rule: one type + one status at creation; `status:done` set BEFORE merge
+  project_board:
+    rule: every issue MUST be added to the appropriate GH Project board AT creation time
+    enforcement: a closed issue with empty projectItems is a defect; sweep + nuke per STANDARDS_COMPLIANCE
+    location_capture: project URL recorded in the repo's reference.md before any issue work
+  pre_create_gate:
+    script: verify-issue-body-draft
+    invocation: "node .claude/standards/scripts/verify-issue-body-draft.mjs <path-to-draft-body.md>"
+    rule: run BEFORE `gh issue create --body-file <path>`; exit 0 required
+    refuses_when: draft body missing `## Description` / `## Acceptance criteria` / `## Standards checklist` / `## Technical notes` OR `## Standards compliance` block
+  standards_checklist:
+    required_in: every implementation issue (type in [story, bug, enhancement, chore] that ships code or specs); epic/docs exempt
+    rule: itemized tickable `- [ ]` items — one per standard requirement the feature must satisfy, each naming the standard it enforces; the creating agent tailors items to the feature's invocation.type; every required_group below is mandatory — omit a group ONLY when it does not apply, stating why on that group's line
+    required_groups:
+      spec_phase: "spec.yaml + spec.md + flows/<fn>.flow.yaml + manual/<flow>.md (HTTP|UI) + ui/<flow>.md ui-locked (UI; USER sign-off) + openapi.yaml (HTTP) + asyncapi.yaml (events) + standards-compliance.yaml — AGENT_STANDARDS + STANDARDS_COMPLIANCE"
+      code_phase: "folder shape + index barrel + JSDoc per export + semantic Tailwind tokens only + naming + data-agent-* attrs on interactive elements — CODING + UI_COMPONENTS + AGENT_STANDARDS"
+      tests: "__tests__ present + 100% coverage (lines/branches/functions/statements) — TESTING"
+      storybook: "Usage/Playground/AllVariants + addon-a11y error mode + viewport presets — UI_COMPONENTS (UI features only)"
+      cross_cutting: "WCAG 2.2 AA + server-side authz + mobile-first + i18n — CROSS_CUTTING_CONCERNS"
+      verify: "verifier Mode A green + standards-compliance.yaml stamped (status:locked, verified:100%) — STANDARDS_COMPLIANCE"
+      gitflow: "branch feat/NNNN-id + `<type>: <subject>` commits + no AI attribution + pushed — GITFLOW"
+    item_resolution:
+      rule: 'every item resolved before merge, in exactly one of two ways: (a) checked done `- [x] <item>`; (b) deliberately not applicable `- [ ] <item> — N/A: <one-line reason>`. A bare `- [ ]` item with no `N/A:` annotation is UNRESOLVED and blocks merge. No third state.'
+    enforced_by:
+      creation: verify-issue-body-draft (presence of `## Standards checklist` section)
+      merge: see merge.standards_checklist_gate (no merge with any unresolved item)
+
+# ---------- standards-compliance reference ----------
+
+issue_body_compliance_block:
+  shape: |
+    ## Standards compliance
+
+    Feature(s) touched: <path>
+    standards-compliance.yaml passes: <yes | no — explain>
+    `pnpm verify` exits 0: <yes | no>
+    Last validated: <YYYY-MM-DD HH:MM:SS Z>
+  see: STANDARDS_COMPLIANCE.yaml
+
+# ---------- branches ----------
+
+branches:
+  pattern: "(feat|fix)/NNNN-tiny-content-identifier"
+  NNNN: 4-digit issue number with zero-padding
+  banned:
+    - direct commit or push to main
+    - direct commit or push to staging
+    - force-push to main or staging
+  exception:
+    nuke_path: force-push to main allowed ONLY to revert non-compliant history; requires I_AUTHORIZED_THIS_PUSH=1 AND I_REALLY_MEAN_MAIN=1
+  base_freshness: pull main latest before creating any branch
+  one_pr_per: [feature, fix, slice of large feature]
+  banned_in_pr:
+    - bundling unrelated changes
+    - mixing a bug fix with a feature
+
+# ---------- commits ----------
+
+commits:
+  message_format: "<type>: <subject>"
+  types: [feat, fix, docs, style, refactor, test, chore]
+  subject_max: 72 chars
+  banned:
+    - "Co-Authored-By: Claude"
+    - "Generated with Claude"
+    - "🤖"
+    - any AI / Anthropic attribution anywhere
+
+# ---------- pull request ----------
+
+pull_request:
+  owner: agent                          # agent owns the full per-issue lifecycle below
+  body_template:
+    - "## Summary"
+    - "## Type of change"
+    - "## Standards gates"              # MECHANICAL — verbatim quoted green gate output; see pr_gate
+    - "## Test plan"
+    - "## Checklist"
+  lifecycle:                            # in order; each step is required agent action
+    1: run the pre_push_gate chain green; a PR is NOT opened while any gate is red (pr_gate.no_100_no_pr)
+    2: '`gh pr create` immediately after `git push`; agent writes PR title + body — the five body_template H2 sections + `Closes #NNNN` trailer; `## Standards gates` carries verbatim gate proof per pr_gate.gate_evidence'
+    3: re-validate locally — re-run `pnpm verify` (typecheck + lint + test + build + verify-standards-compliance; or per-project equivalent) against the merge-target tree on this branch tip before merge
+    4: 'resolve every `## Standards checklist` item on the linked issue — `- [x] <item>` (done) OR `- [ ] <item> — N/A: <reason>`; zero bare-unchecked items at merge'
+    5: flip the issue label from `status:in-progress` to `status:done` BEFORE merge (per issues.labels.rule)
+    6: '`gh pr merge --squash --delete-branch` once every checklist item is resolved AND the PR''s CI checks (if any) are green AND the local re-verify exited 0'
+    7: close the issue (auto-closed by `Closes #NNNN`; if GitHub does not auto-close, run `gh issue close`)
+    8: confirm every checklist item is checked on the project board entry; fill per-issue completion fields when the board tracks them
+    9: delete the local branch (`git branch -D`) AND confirm remote deletion landed (per close.delete_branch_after_merge)
+
+# ---------- PR gate (MECHANICAL — no 100%, no PR) ----------
+
+pr_gate:
+  no_100_no_pr: true                    # any red gate ⇒ no `gh pr create` runs; the full pre_push_gate chain is green BEFORE the PR opens
+  gate_evidence:
+    section: "## Standards gates"
+    rule: MUST contain the copy-pasted final-line output of every mechanical gate proving 100% — the pre-push chain result, each shipping package's `verify` EXIT 0, and Mode D (branch stamp) green; every embedded line reads as a pass (EXIT 0 / GREEN / "locked + fresh"); a paraphrase, a summary, or a missing line is a violation
+  pre_create_gate:
+    script: verify-pr-body-draft
+    invocation: "node .claude/standards/scripts/verify-pr-body-draft.mjs <path-to-pr-body.md>"
+    rule: run BEFORE `gh pr create --body-file <path>`; exit 0 required
+    refuses_when: 'PR body missing any required H2 section (Summary / Type of change / Standards gates / Test plan / Checklist) OR missing the `Closes #NNNN` trailer OR `## Standards gates` absent / lacking quoted gate output / containing any gate line that is not a pass'
+  parallels: issues.pre_create_gate (verify-issue-body-draft) — same shape, PR analogue
+
+# ---------- verifier mode catalog (15 modes — SINGLE OWNER) ----------
+# This is THE full mode catalog. STANDARDS_COMPLIANCE.yaml owns the semantics
+# of the core modes (A/B/C/D/E) and points here for the catalog.
+
+verifier_modes:
+  layers:
+    timestamp_ops: letters A–F — read or write the `status:` / `last_validated:` fields on `__specs__/standards-compliance.yaml`
+    heavy_proof: named modes — actually execute code gates (typecheck, build, lint, unit, e2e)
+    deep_ceremony: named modes — unlock → Pristine + Compliance per feature → relock + checklist
+  lock_state_machine: 'every `__specs__/standards-compliance.yaml` carries `status: locked | unlocked`; Mode A flips to unlocked at start, runs gates, flips back to locked with fresh last_validated on pass; interrupt mid-gates → stays unlocked (signal: slice not re-validated); Modes B / B.5 / D / F / F-Random refuse to validate any unlocked slice'
+  timestamp_modes:
+    mode_a: { action: update, scope: one slice (this commit), gates: scoped Pristine + lock-shape (refuses to stamp on failure) }
+    mode_b: { action: validate, scope: HEAD only, read_only: true }
+    mode_b5: { action: validate, scope: uncommitted working tree (staged + unstaged), read_only: true }
+    mode_c: { action: update, scope: this branch (origin/main..HEAD), implementation: fans Mode A across every slice }
+    mode_d: { action: validate, scope: this branch (origin/main..HEAD), read_only: true }
+    mode_e: { action: update, scope: entire repo, implementation: fans Mode A across every slice }
+    mode_f: { action: validate, scope: entire repo, read_only: true }
+    mode_f_random: { action: validate, scope: random ~20% of repo, read_only: true }
+  heavy_proof_modes:
+    mode_pristine: typecheck + build + lint + unit tests + e2e tests
+    mode_compliance: the 11-script compliance chain (specs/flows/manuals/lock-files/source-coverage/freshness/RULE 0 boundaries/UI gates)
+    mode_pristine_and_compliance: Pristine then Compliance — the pre-merge gate (manual, on-demand)
+  deep_ceremony_modes:
+    mode_verify_all: feature-by-feature deep ceremony with checklist; hours-long; manual
+    mode_verify_all_random: same as verify-all on random ~20% feature subset
+  inspection_maintenance_modes:
+    mode_inspect: read-only walk of every lock — status + last_validated + freshness; no execution
+    mode_cleanup_orphans: detect orphan lock files + dead catalog entries; report-only by default
+
+# ---------- pre-push gate (MECHANICAL 100% — no green, no push) ----------
+
+pre_push_gate:
+  doctrine: no 100% standards compliance, no push — the pre-push hook is a MECHANICAL, non-bypassable gate that EXECUTES the standards chain and REFUSES the push (non-zero exit) on ANY failure; it runs the real gates, never merely trusts slice stamps (a stale / missing / wrong-scoped stamp must not pass)
+  runs_in_order:                          # every step; first non-zero exit aborts the push
+    - stamps: EVERY feature's __specs__/standards-compliance.yaml — backend AND UI (component/composite/page) — present + status:locked + verified:100% + fresh (git-history freshness; see STANDARDS_COMPLIANCE.yaml)
+    - pristine: each package's `verify` — typecheck + lint + unit tests + 100% coverage + build (+ storybook build for the design-system package)
+    - compliance: the full discipline chain runnable without external services — component/composite/page gates + source-coverage + freshness
+  coverage_rule: the gate MUST run against every package that ships code in this repo; adding a package without wiring it into the gate is itself a violation
+  exit_required: 0
+  no_green_no_push: true
+  bypass: FORBIDDEN — `git push --no-verify` / `-o` is a standards violation; FIX the failing gate (re-walk + re-stamp + commit, fix source, update spec), never bypass
+  enforcement: Husky pre-push hook (core.hooksPath) executes the chain; non-zero exit aborts the push before it reaches the remote
+  external_service_gates:                 # things that need a DB / live reference / network
+    run_in: CI (they gate the MERGE, not the push)
+    examples: DB-integration tests, live/reference parity, headless scenario suites
+  ci_required: true                       # CI mirrors the local chain AND adds the external-service gates; a red CI blocks the merge
+
+# ---------- pre-commit gate ----------
+
+pre_commit_gate:
+  owner: Mode A (slice stamp)
+  scope: 'for the slice owning the staged files — run scoped Pristine + lock-shape gates; on pass flip `status: locked` and update `last_validated`; on fail refuse the commit'
+  enforcement: pre-commit hook invokes Mode A against the touched slice path
+
+# ---------- final-push / about-to-merge gate ----------
+
+final_push_gate:
+  owner: PM agent (when present) OR developer-invoked directly
+  prompt: "Last full verify was {N} ago. Pick: (B) HEAD stamp check; (D) branch stamp check; (Pristine+Compliance) full code gates; (Verify-All) deep ceremony."
+  modes:
+    B: HEAD-only stamp check
+    D: branch (origin/main..HEAD) stamp check
+    Pristine+Compliance: full code gates on every slice + 11-script compliance chain (no per-slice unlock/relock)
+    Verify-All: feature-by-feature deep ceremony (unlock → Pristine + Compliance → relock); hours-long
+  house_clean_trigger:
+    commits_since_last_verify_all: 25
+    days_since_last_verify_all: 7
+    behaviour: prompt fires regardless of developer intent when either threshold is hit
+  exit_required: 0 from the chosen mode
+  see: AGENT_ARCHITECTURE.md             # full lifecycle spec
+
+# ---------- merge ----------
+
+merge:
+  branch_up_to_date_with_main: required before merge
+  merge_method: merge (default) or squash (per-project)
+  autonomous_after_pristine: true
+  standards_checklist_gate:
+    rule: 'a PR does NOT merge until every item in each linked issue''s `## Standards checklist` is resolved — `- [x]` (done) OR `- [ ] <item> — N/A: <reason>` (deliberately not applicable); any bare-unchecked item blocks the merge'
+    who_resolves: 'the agent ticks/annotates each box on the linked issue (mirrored into the PR body when applicable) BEFORE merging; on an unresolved item the agent fixes it or annotates `- [ ] <item> — N/A: <reason>` first — never merges past a bare-unchecked item'
+    verifies: 'every checklist item is `[x]` or carries `N/A: <reason>`; zero bare-unchecked items'
+  see: STANDARDS_COMPLIANCE.yaml         # for the compliant/<sha> tag rule
+
+# ---------- close issue + cleanup ----------
+
+close:
+  precondition: feature is fully implemented AND standards-compliance.yaml status=locked AND verified=100%
+  delete_branch_after_merge:
+    remote: true
+    local: true
+
+# ---------- audits + override ----------
+
+audit:
+  open_issues:
+    rule: periodically audit open issues against the labels + standards-compliance state
+    frequency: weekly or before any major release
+  user_override:
+    rule: a user instruction overrides the standard for that specific scope only
+    scope: per-push or per-action (NOT per-session)
+
+# ---------- release tagging (web apps) ----------
+
+release_tags:
+  format: vYYYY.MM.DD.N
+  emitted_when: a deploy goes to production
+  rule: every prod deploy carries a release tag; rollbacks reference the prior tag
+
+# ---------- repo setup (one-time) ----------
+
+repo_setup:
+  required:
+    - "main branch protected against direct push"
+    - "Husky pre-push hook installed (invokes verifier Mode B)"
+    - "GitHub Project board created + URL recorded in reference.md"
+    - "reference.md present at repo root with: repo URL, project URL, deploy URL, env-vars location"
+
+# ---------- mechanical gates (no compliance, no push, no PR) ----------
+
+mechanical_gates:
+  pre_push_hook:  # generated by install-slice-gates.sh; NO bypass exists
+    refuses:
+      - direct pushes to main (main moves only via PR merge)
+      - branch names outside (feat|fix)/NNNN-kebab-slug
+      - "any pushed commit whose subject lacks the <type>: <subject> shape or exceeds 65 chars (squash-suffix headroom for the 72 limit)"
+      - pushes on a day whose docs/conversations/DAILY_CONVERSATION_<utc-date>.md does not exist on disk
+      - a non-zero `pnpm verify` (verifier Mode B)
+  pr_body_draft_gate:
+    script: scripts/verify-pr-body-draft.mjs
+    rule: run against the body draft BEFORE `gh pr create`; NEVER create a PR until it exits 0; requirements = pr_gate.pre_create_gate.refuses_when + pr_gate.gate_evidence (explicit pass lines, zero failure markers — less than 100% green means no PR exists to create)
+  pr_shape_ci:
+    file: .github/workflows/pr-shape.yml
+    rule: server-side re-validation of branch shape, title (type + ≤65 chars), body sections, gate proofs, Closes trailer — red check on any violation
+
+last_updated: 2026-07-11T00:00:00Z

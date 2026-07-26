@@ -44,7 +44,10 @@ provenance:
     - "Mermaid.js text-first flowchart syntax and its ```mermaid fenced-code convention used across GitHub/Notion/docs sites"
     - "Mermaid parse-error UX (github.com/mermaid-js/mermaid issues #937, #4645) which names the offending token/line"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/parse/__specs__/flows/parse-flowchart.flow.md"
+  - "src/react/__specs__/flows/render-flowchart.flow.md"
+  - "src/react/__specs__/flows/flow-chart.flow.md"
 ---
 
 # J-001: Render a flowchart from a text description (diagram-as-code)

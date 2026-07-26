@@ -24,7 +24,7 @@ export function Footer() {
         href="https://www.npmjs.com/package/@yantrakit/flowchart-react"
         target="_blank"
         style={{
-          color: '#cb3837',
+          color: '#f87171',
           textDecoration: 'none',
           fontWeight: 500,
         }}
@@ -36,7 +36,7 @@ export function Footer() {
       <a
         href="https://yantrakit.com"
         style={{
-          color: '#10b981',
+          color: '#34d399',
           textDecoration: 'none',
           fontWeight: 500,
           display: 'flex',

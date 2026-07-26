@@ -42,7 +42,8 @@ provenance:
     - "React Flow's dedicated per-version migration guides (reactflow.dev/learn/troubleshooting/migrate-to-v11, -v12)"
     - "The reactflow -> @xyflow/react package-rename precedent as an example of a breaking major-version change"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "docs:MIGRATION.md"
 ---
 
 # J-010: Migrate from a previous major version of the library

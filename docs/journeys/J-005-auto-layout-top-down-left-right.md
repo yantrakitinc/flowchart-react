@@ -40,7 +40,12 @@ provenance:
     - "React Flow's Dagre Tree and Elkjs Tree auto-layout examples (reactflow.dev/examples/layout/dagre, /elkjs)"
     - "dagre's rankdir (TB/LR) direction convention for directed-graph layout"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/layout/__specs__/flows/layout.flow.md"
+  - "src/layout/__specs__/flows/dagre-engine-run.flow.md"
+  - "src/layout/__specs__/flows/elk-engine-run.flow.md"
+  - "src/layout/__specs__/flows/load-elk.flow.md"
+  - "src/ir/__specs__/flows/isDirection.flow.md"
 ---
 
 # J-005: Auto-layout a diagram top-down / left-right without hand-positioning

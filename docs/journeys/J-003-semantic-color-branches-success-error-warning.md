@@ -38,7 +38,9 @@ provenance:
     - "CI/CD pipeline graph conventions (GitHub Actions, GitLab CI) using green/red/amber per stage status"
     - "Mermaid classDef/style semantic-class convention for coloring node groups"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/react/edges/__specs__/flows/to-react-flow-edge.flow.md"
+  - "src/ir/__specs__/flows/isEdgeType.flow.md"
 ---
 
 # J-003: Semantically color success / error / warning branches

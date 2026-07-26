@@ -40,7 +40,8 @@ provenance:
     - "React Flow v12's explicit SSR/SSG support as a headline migration feature (reactflow.dev/whats-new/2024-07-09)"
     - "Common Next.js client-boundary conventions for DOM-measurement-dependent canvas libraries"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/react/__specs__/flows/render-flowchart.flow.md"
 ---
 
 # J-014: Integrate the diagram in a Next.js / SSR app

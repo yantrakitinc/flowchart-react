@@ -43,7 +43,8 @@ provenance:
     - "Mermaid's known limitation of static-SVG output with minimal per-node interactivity, a documented reason teams migrate to React-native diagram libraries"
     - "Migration-path conventions expected when switching between peer diagram libraries (Mermaid -> React Flow-family tools)"
   not_derived_from_our_flows: true
-maps_to_flows: []
+maps_to_flows:
+  - "src/parse/__specs__/flows/parse-flowchart.flow.md"
 ---
 
 # J-020: Switch from Mermaid after hitting its interactivity limits

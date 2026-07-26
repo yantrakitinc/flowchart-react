@@ -1,359 +1,235 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { action } from '@storybook/addon-actions';
-import { useState } from 'react';
-import { FlowChart } from './FlowChart';
-import type { iFlowDefinition, iFlowNode } from './types';
+import { useState, type CSSProperties } from 'react';
+import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { FlowChart } from './react/FlowChart';
+import { elkEngine } from './layout/elkEngine';
+import type { iFlowGraph } from './ir/types';
+import type { iFlowNodeData } from './react/types';
 
 const meta: Meta<typeof FlowChart> = {
-  title: 'Components/FlowChart',
+  title: 'FlowChart/FlowChart',
   component: FlowChart,
   parameters: {
     layout: 'fullscreen',
-  },
-  tags: ['autodocs'],
-  args: {
-    onNodeClick: action('onNodeClick'),
-    onPathChange: action('onPathChange'),
+    docs: {
+      description: {
+        component:
+          'Author a diagram as Mermaid-like `chart` text or a `graph` object; it renders on ' +
+          'React Flow with auto-layout, interactive nodes, semantic path detection, and a ' +
+          '"movie mode" that plays a path node-by-node.',
+      },
+    },
   },
   argTypes: {
-    pathDrawerPosition: {
-      control: 'select',
-      options: ['top', 'bottom', 'left', 'right'],
-    },
+    pathDrawerPosition: { control: 'select', options: ['top', 'bottom', 'left', 'right'] },
+    direction: { control: 'select', options: ['TD', 'BT', 'LR', 'RL'] },
+    // Log every callback to the Storybook "Actions" tab so you can watch them fire.
+    onNodeClick: { action: 'onNodeClick' },
+    onPathChange: { action: 'onPathChange' },
+    onPlaybackStep: { action: 'onPlaybackStep' },
+    onPlaybackEnd: { action: 'onPlaybackEnd' },
   },
-  decorators: [
-    (Story) => (
-      <div style={{ height: '100vh', width: '100%' }}>
-        <Story />
-      </div>
-    ),
-  ],
 };
-
 export default meta;
+
 type Story = StoryObj<typeof FlowChart>;
+const doc = (story: string) => ({ parameters: { docs: { description: { story } } } });
 
-const simpleFlow: iFlowDefinition = {
-  id: 'simple-flow',
-  name: 'Simple Flow',
+const CHECKOUT = `flowchart TD
+  start([Order placed]) --> cart[Review cart]
+  cart --> pay{Payment OK?}
+  pay -->|yes| ship[Ship order]
+  pay ==>|no| fail[Payment failed]:::error
+  pay -.->|review| hold[Manual review]:::warning
+  ship --> done([Delivered])
+  fail --> done
+  hold --> ship`;
+
+/** The headline feature — diagram-as-code. Edit the text in Controls to re-render. */
+export const AuthorWithText: Story = {
+  args: { chart: CHECKOUT, height: 560 },
+  ...doc('Write a Mermaid-like string; positions + the red error / dotted warning paths are computed for you.'),
+};
+
+const SIGNUP: iFlowGraph = {
+  id: 'signup',
+  name: 'Signup',
+  direction: 'TD',
   nodes: [
-    { id: 'start', label: 'Start', type: 'start' },
-    { id: 'action1', label: 'Process Data', type: 'action' },
-    { id: 'end', label: 'End', type: 'end' },
+    { id: 's', label: 'Visitor', type: 'start' },
+    { id: 'form', label: 'Fill form', type: 'action', description: 'Email + password' },
+    { id: 'v', label: 'Valid?', type: 'decision' },
+    { id: 'ok', label: 'Create account', type: 'action' },
+    { id: 'err', label: 'Show errors', type: 'error' },
+    { id: 'e', label: 'Dashboard', type: 'end' },
   ],
   edges: [
-    { from: 'start', to: 'action1', type: 'happy' },
-    { from: 'action1', to: 'end', type: 'happy' },
+    { id: 'e0', from: 's', to: 'form', type: 'default' },
+    { id: 'e1', from: 'form', to: 'v', type: 'default' },
+    { id: 'e2', from: 'v', to: 'ok', type: 'happy', label: 'yes' },
+    { id: 'e3', from: 'v', to: 'err', type: 'error', label: 'no' },
+    { id: 'e4', from: 'ok', to: 'e', type: 'happy' },
+    { id: 'e5', from: 'err', to: 'form', type: 'warning' },
   ],
 };
 
-const decisionFlow: iFlowDefinition = {
-  id: 'decision-flow',
-  name: 'Decision Flow',
+/** Author with the IR object; supports a per-node `description` (click the node's “+”). */
+export const AuthorWithObject: Story = {
+  args: { graph: SIGNUP, height: 560, showMiniMap: true },
+  ...doc('Same renderer, object input — the exact shape `parseFlowchart` produces.'),
+};
+
+/** Direction via the header or the `direction` prop; handles re-orient automatically. */
+export const LeftToRight: Story = {
+  args: {
+    height: 360,
+    chart: `flowchart LR
+  a([Commit]) --> b[Install] --> c[Test] --> d{Pass?}
+  d -->|yes| e([Deploy])
+  d ==>|no| a`,
+  },
+  ...doc('A CI pipeline laid out left-to-right.'),
+};
+
+/** dagre is default; opt into ELK for denser graphs with `layoutEngine={elkEngine}`. */
+export const ElkLayoutEngine: Story = {
+  args: { chart: CHECKOUT, layoutEngine: elkEngine, height: 560 },
+  ...doc('Same diagram via ELK instead of dagre — compare the edge routing.'),
+};
+
+/** Detected start→end paths, colored by semantics; click one in the drawer to isolate it. */
+export const PathDetection: Story = {
+  args: { chart: CHECKOUT, height: 560, pathDrawerPosition: 'right' },
+  ...doc('The path drawer lists happy/warning/error routes; selecting one dims the rest.'),
+};
+
+/** Per-node click → your screen. `onNodeClick(id, data)` fires on every node. */
+export const ClickNodeForScreen: Story = {
+  render: (args) => {
+    const [screen, setScreen] = useState<string>('(click a node)');
+    return (
+      <div style={{ display: 'flex', gap: 12, padding: 12 }}>
+        <div style={{ flex: 1 }}>
+          <FlowChart {...args} onNodeClick={(id, d) => setScreen(`${d.type} — ${d.label} (#${id})`)} />
+        </div>
+        <div
+          style={{
+            width: 240,
+            border: '1px solid #e4e4e7',
+            borderRadius: 12,
+            padding: 16,
+            fontFamily: 'system-ui',
+            background: '#fff',
+          }}
+        >
+          <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#52525b' }}>Screen for node</div>
+          <div style={{ fontSize: 16, fontWeight: 600, marginTop: 6 }}>{screen}</div>
+          <p style={{ fontSize: 12, color: '#52525b', marginTop: 12 }}>
+            Wire a real screenshot/route here off <code>onNodeClick</code>.
+          </p>
+        </div>
+      </div>
+    );
+  },
+  args: { chart: CHECKOUT, height: 520, showPathDrawer: false },
+  ...doc('Associate a screen with each node: click a node → show its UI state on the side.'),
+};
+
+/**
+ * MOVIE MODE — `autoPlay` walks a path node-by-node. `onPlaybackStep(nodeId, index, data)`
+ * fires on each step, so the panel on the right swaps to that node's "screen" as the path
+ * plays. Plays the selected path, or the first detected path when none is selected.
+ */
+export const MovieMode: Story = {
+  render: (args) => {
+    const [step, setStep] = useState<{ id: string; i: number; label: string } | null>(null);
+    return (
+      <div style={{ display: 'flex', gap: 12, padding: 12 }}>
+        <div style={{ flex: 1 }}>
+          <FlowChart
+            {...args}
+            onPlaybackStep={(id, i, d) => setStep({ id, i, label: d.label })}
+          />
+        </div>
+        <div
+          style={{
+            width: 260,
+            border: '2px solid #6366f1',
+            borderRadius: 12,
+            padding: 16,
+            fontFamily: 'system-ui',
+            background: 'linear-gradient(180deg,#eef2ff,#fff)',
+          }}
+        >
+          <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#6366f1', fontWeight: 700 }}>
+            Now playing — step {step ? step.i + 1 : 0}
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, marginTop: 8 }}>
+            {step ? step.label : 'Press play ▶'}
+          </div>
+          <p style={{ fontSize: 12, color: '#52525b', marginTop: 12 }}>
+            This panel updates from <code>onPlaybackStep</code> — swap in the screenshot for the
+            current node here.
+          </p>
+        </div>
+      </div>
+    );
+  },
+  args: { chart: CHECKOUT, height: 520, autoPlay: true, playbackSpeedMs: 1400, loop: true },
+  ...doc('Auto-plays the first path; the side panel shows each node’s screen as it advances.'),
+};
+
+/** A custom node component supplied via the `nodeTypes` registry. */
+function KpiNode({ data }: NodeProps): JSX.Element {
+  const d = data as iFlowNodeData & { metric?: string };
+  return (
+    <div style={{ border: '2px solid #6366f1', borderRadius: 12, padding: '10px 14px', background: '#fff', textAlign: 'center', fontFamily: 'system-ui', minWidth: 130 }}>
+      <Handle type="target" position={Position.Left} />
+      <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 700 }}>{d.label}</div>
+      {d.metric && <div style={{ fontSize: 22, fontWeight: 800 }}>{d.metric}</div>}
+      <Handle type="source" position={Position.Right} />
+    </div>
+  );
+}
+const KPI: iFlowGraph = {
+  id: 'kpi', name: 'KPIs', direction: 'LR',
   nodes: [
-    { id: 'start', label: 'Start', type: 'start' },
-    { id: 'check', label: 'Valid?', type: 'decision' },
-    { id: 'success', label: 'Process', type: 'action' },
-    { id: 'error', label: 'Handle Error', type: 'error' },
-    { id: 'end', label: 'End', type: 'end' },
+    { id: 'v', label: 'Visits', type: 'action', data: { metric: '12.4k' } },
+    { id: 's', label: 'Signups', type: 'action', data: { metric: '1.1k' } },
+    { id: 'p', label: 'Paid', type: 'action', data: { metric: '218' } },
   ],
   edges: [
-    { from: 'start', to: 'check', type: 'default' },
-    { from: 'check', to: 'success', type: 'happy', label: 'Yes' },
-    { from: 'check', to: 'error', type: 'error', label: 'No' },
-    { from: 'success', to: 'end', type: 'happy' },
-    { from: 'error', to: 'end', type: 'error' },
+    { id: 'e0', from: 'v', to: 's', type: 'happy' },
+    { id: 'e1', from: 's', to: 'p', type: 'happy' },
   ],
 };
 
-const complexFlow: iFlowDefinition = {
-  id: 'complex-flow',
-  name: 'User Registration Flow',
-  nodes: [
-    { id: 'start', label: 'Start', type: 'start' },
-    { id: 'input', label: 'Enter Details', type: 'action' },
-    { id: 'validate', label: 'Valid?', type: 'decision' },
-    { id: 'check-email', label: 'Email exists?', type: 'decision' },
-    { id: 'create-user', label: 'Create User', type: 'action' },
-    { id: 'send-email', label: 'Send Welcome', type: 'action' },
-    { id: 'validation-error', label: 'Show Errors', type: 'warning' },
-    { id: 'email-exists', label: 'Already Registered', type: 'error' },
-    { id: 'success', label: 'Success', type: 'end' },
-    { id: 'failure', label: 'Failed', type: 'end' },
-  ],
-  edges: [
-    { from: 'start', to: 'input', type: 'default' },
-    { from: 'input', to: 'validate', type: 'default' },
-    { from: 'validate', to: 'check-email', type: 'happy', label: 'Yes' },
-    { from: 'validate', to: 'validation-error', type: 'warning', label: 'No' },
-    { from: 'validation-error', to: 'input', type: 'warning' },
-    { from: 'check-email', to: 'create-user', type: 'happy', label: 'No' },
-    { from: 'check-email', to: 'email-exists', type: 'error', label: 'Yes' },
-    { from: 'create-user', to: 'send-email', type: 'happy' },
-    { from: 'send-email', to: 'success', type: 'happy' },
-    { from: 'email-exists', to: 'failure', type: 'error' },
-  ],
+/** Replace any node type with your own component via `nodeTypes`; `data.data` flows through. */
+export const CustomNodeComponents: Story = {
+  args: { graph: KPI, height: 320, nodeTypes: { action: KpiNode }, showPathDrawer: false },
+  ...doc('The `action` type rendered as a bespoke KPI card — your component, our layout + edges.'),
 };
 
-const loginFlow: iFlowDefinition = {
-  id: 'login-flow',
-  name: 'User Login',
-  nodes: [
-    { id: 'A', label: 'Start', type: 'start' },
-    { id: 'B', label: 'User visits login page', type: 'action' },
-    { id: 'C', label: 'Login method?', type: 'decision' },
-    { id: 'D', label: 'Enter credentials', type: 'action' },
-    { id: 'E', label: 'Valid credentials?', type: 'decision' },
-    { id: 'F', label: 'Show error message', type: 'error' },
-    { id: 'G', label: 'Check email verified?', type: 'decision' },
-    { id: 'H', label: 'Redirect to provider', type: 'action' },
-    { id: 'I', label: 'User authorizes', type: 'action' },
-    { id: 'J', label: 'Authorization successful?', type: 'decision' },
-    { id: 'K', label: 'Show error, return to login', type: 'error' },
-    { id: 'L', label: 'Get user profile from provider', type: 'action' },
-    { id: 'M', label: 'Send verification email', type: 'action' },
-    { id: 'N', label: 'Show verification required message', type: 'action' },
-    { id: 'O', label: 'End - Awaiting verification', type: 'end' },
-    { id: 'P', label: 'Create session', type: 'action' },
-    { id: 'Q', label: 'User exists?', type: 'decision' },
-    { id: 'R', label: 'Create user account', type: 'action' },
-    { id: 'S', label: 'Set auth cookies', type: 'action' },
-    { id: 'T', label: 'Redirect to dashboard', type: 'action' },
-    { id: 'U', label: 'End - Logged in', type: 'end' },
-  ],
-  edges: [
-    { from: 'A', to: 'B', type: 'default' },
-    { from: 'B', to: 'C', type: 'default' },
-    { from: 'C', to: 'D', type: 'default', label: 'Email/Pass' },
-    { from: 'D', to: 'E', type: 'default' },
-    { from: 'E', to: 'F', type: 'error', label: 'No' },
-    { from: 'F', to: 'D', type: 'error' },
-    { from: 'E', to: 'G', type: 'happy', label: 'Yes' },
-    { from: 'C', to: 'H', type: 'default', label: 'Social' },
-    { from: 'H', to: 'I', type: 'default' },
-    { from: 'I', to: 'J', type: 'default' },
-    { from: 'J', to: 'K', type: 'error', label: 'No' },
-    { from: 'K', to: 'B', type: 'error' },
-    { from: 'J', to: 'L', type: 'happy', label: 'Yes' },
-    { from: 'G', to: 'M', type: 'warning', label: 'No' },
-    { from: 'M', to: 'N', type: 'default' },
-    { from: 'N', to: 'O', type: 'default' },
-    { from: 'G', to: 'P', type: 'happy', label: 'Yes' },
-    { from: 'L', to: 'Q', type: 'default' },
-    { from: 'Q', to: 'R', type: 'default', label: 'No' },
-    { from: 'R', to: 'P', type: 'default' },
-    { from: 'Q', to: 'P', type: 'happy', label: 'Yes' },
-    { from: 'P', to: 'S', type: 'happy' },
-    { from: 'S', to: 'T', type: 'happy' },
-    { from: 'T', to: 'U', type: 'happy' },
-  ],
+/** All colors are CSS variables (`--fc-*`) — theme with pure CSS, no props. */
+export const ThemingWithTokens: Story = {
+  render: (args) => (
+    <div
+      style={{
+        '--fc-node-bg': '#1e1b2e', '--fc-node-text': '#e9e7f5', '--fc-node-action': '#8b5cf6',
+        '--fc-node-start': '#22d3ee', '--fc-node-end': '#34d399', '--fc-node-decision': '#fbbf24',
+        '--fc-drawer-bg': '#17141f', '--fc-drawer-text': '#e9e7f5', '--fc-drawer-border': '#3b3550',
+        background: '#0f0d17', padding: 12,
+      } as CSSProperties}
+    >
+      <FlowChart {...args} />
+    </div>
+  ),
+  args: { chart: CHECKOUT, height: 520 },
+  ...doc('A dark theme applied by overriding the `--fc-*` variables on a wrapper.'),
 };
 
-const paymentFlow: iFlowDefinition = {
-  id: 'payment-flow',
-  name: 'Payment Processing',
-  nodes: [
-    { id: 'start', label: 'Start', type: 'start' },
-    { id: 'select-method', label: 'Select Payment', type: 'action' },
-    { id: 'method-check', label: 'Method?', type: 'decision' },
-    { id: 'card-input', label: 'Enter Card', type: 'action' },
-    { id: 'bank-input', label: 'Bank Transfer', type: 'action' },
-    { id: 'wallet-input', label: 'Digital Wallet', type: 'action' },
-    { id: 'process', label: 'Process Payment', type: 'action' },
-    { id: 'verify', label: 'Verified?', type: 'decision' },
-    { id: 'success', label: 'Complete', type: 'end' },
-    { id: 'retry', label: 'Retry', type: 'warning' },
-    { id: 'failed', label: 'Failed', type: 'end' },
-  ],
-  edges: [
-    { from: 'start', to: 'select-method', type: 'default' },
-    { from: 'select-method', to: 'method-check', type: 'default' },
-    { from: 'method-check', to: 'card-input', type: 'happy', label: 'Card' },
-    { from: 'method-check', to: 'bank-input', type: 'default', label: 'Bank' },
-    { from: 'method-check', to: 'wallet-input', type: 'default', label: 'Wallet' },
-    { from: 'card-input', to: 'process', type: 'happy' },
-    { from: 'bank-input', to: 'process', type: 'default' },
-    { from: 'wallet-input', to: 'process', type: 'default' },
-    { from: 'process', to: 'verify', type: 'default' },
-    { from: 'verify', to: 'success', type: 'happy', label: 'Yes' },
-    { from: 'verify', to: 'retry', type: 'warning', label: 'Retry' },
-    { from: 'verify', to: 'failed', type: 'error', label: 'No' },
-    { from: 'retry', to: 'process', type: 'warning' },
-  ],
-};
-
-export const Simple: Story = {
-  args: {
-    flow: simpleFlow,
-  },
-};
-
-export const WithDecision: Story = {
-  args: {
-    flow: decisionFlow,
-  },
-};
-
-export const Complex: Story = {
-  args: {
-    flow: complexFlow,
-  },
-};
-
-export const PaymentProcess: Story = {
-  args: {
-    flow: paymentFlow,
-  },
-};
-
-export const UserLogin: Story = {
-  args: {
-    flow: loginFlow,
-  },
-};
-
-const onNodeClickAction = action('onNodeClick');
-const onPathChangeAction = action('onPathChange');
-
-export const WithPathSelection: Story = {
-  render: () => {
-    const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
-
-    const handlePathChange = (pathId: string | null) => {
-      onPathChangeAction(pathId);
-      setSelectedPathId(pathId);
-    };
-
-    return (
-      <FlowChart
-        flow={complexFlow}
-        selectedPathId={selectedPathId ?? undefined}
-        onPathChange={handlePathChange}
-        onNodeClick={onNodeClickAction}
-      />
-    );
-  },
-};
-
-export const WithActiveNode: Story = {
-  render: () => {
-    const [activeNodeId, setActiveNodeId] = useState<string>('validate');
-
-    const handleNodeClick = (node: iFlowNode) => {
-      onNodeClickAction(node);
-      setActiveNodeId(node.id);
-    };
-
-    return (
-      <FlowChart
-        flow={complexFlow}
-        activeNodeId={activeNodeId}
-        onNodeClick={handleNodeClick}
-        onPathChange={onPathChangeAction}
-      />
-    );
-  },
-};
-
-export const InteractiveDemo: Story = {
-  render: () => {
-    const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
-    const [activeNodeId, setActiveNodeId] = useState<string | undefined>();
-
-    const handleNodeClick = (node: iFlowNode) => {
-      onNodeClickAction(node);
-      setActiveNodeId(node.id);
-    };
-
-    const handlePathChange = (pathId: string | null) => {
-      onPathChangeAction(pathId);
-      setSelectedPathId(pathId);
-    };
-
-    return (
-      <FlowChart
-        flow={paymentFlow}
-        selectedPathId={selectedPathId ?? undefined}
-        onPathChange={handlePathChange}
-        activeNodeId={activeNodeId}
-        onNodeClick={handleNodeClick}
-      />
-    );
-  },
-};
-
-export const DrawerPositionTop: Story = {
-  render: () => {
-    const [selectedPathId, setSelectedPathId] = useState<string | null>('path-1');
-
-    const handlePathChange = (pathId: string | null) => {
-      onPathChangeAction(pathId);
-      setSelectedPathId(pathId);
-    };
-
-    return (
-      <FlowChart
-        flow={decisionFlow}
-        selectedPathId={selectedPathId ?? undefined}
-        onPathChange={handlePathChange}
-        onNodeClick={onNodeClickAction}
-        pathDrawerPosition="top"
-      />
-    );
-  },
-};
-
-export const DrawerPositionBottom: Story = {
-  render: () => {
-    const [selectedPathId, setSelectedPathId] = useState<string | null>('path-1');
-
-    const handlePathChange = (pathId: string | null) => {
-      onPathChangeAction(pathId);
-      setSelectedPathId(pathId);
-    };
-
-    return (
-      <FlowChart
-        flow={decisionFlow}
-        selectedPathId={selectedPathId ?? undefined}
-        onPathChange={handlePathChange}
-        onNodeClick={onNodeClickAction}
-        pathDrawerPosition="bottom"
-      />
-    );
-  },
-};
-
-export const DrawerPositionLeft: Story = {
-  render: () => {
-    const [selectedPathId, setSelectedPathId] = useState<string | null>('path-1');
-
-    const handlePathChange = (pathId: string | null) => {
-      onPathChangeAction(pathId);
-      setSelectedPathId(pathId);
-    };
-
-    return (
-      <FlowChart
-        flow={decisionFlow}
-        selectedPathId={selectedPathId ?? undefined}
-        onPathChange={handlePathChange}
-        onNodeClick={onNodeClickAction}
-        pathDrawerPosition="left"
-      />
-    );
-  },
-};
-
-export const CustomLayout: Story = {
-  args: {
-    flow: simpleFlow,
-    config: {
-      nodeWidth: 200,
-      nodeHeight: 80,
-      horizontalSpacing: 200,
-      verticalSpacing: 150,
-      padding: 150,
-    },
-  },
+/** Malformed text renders an inline error box, never a crash. */
+export const ParseErrorHandling: Story = {
+  args: { chart: 'missing a header --> nowhere', height: 220, showPathDrawer: false },
+  ...doc('No `flowchart <DIR>` header → a friendly error box with the exact reason.'),
 };

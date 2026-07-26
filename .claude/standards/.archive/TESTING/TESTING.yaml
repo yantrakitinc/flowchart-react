@@ -1,0 +1,243 @@
+version: 1
+
+# Rationale for every rule: TESTING.detail.md.
+
+# ---------- coverage ----------
+
+coverage:
+  threshold: 100%                                # lines / branches / functions / statements
+  perFile: true                                  # not aggregate; every measured file 100%
+  enforced_by: vitest coverage.thresholds (100, perFile:true) — the verify chain FAILS below 100%; an unconfigured threshold is a defect, not a pass
+  cant_reach_100_percent: split the file or refactor for testability
+  skip_exception: physically or mathematically impossible only
+  banned_excuses:
+    - too long
+    - too many tests required
+    - improbable
+  measured: ALL of src/**/*.{ts,tsx} — every file 100% perFile, including Drizzle schemas (declare FKs via foreignKey() in the table-config callback so they execute + cover, NOT inline .references(() => …) which only runs at migration-gen) and the app shell (route/layout/page — call the component fns / render them)
+  not_measured:                                  # the DEFINITION of the measured set (non-product-code), not an exclusion of logic files
+    - "**/__tests__/**, **/*.test.*"             # the tests themselves
+    - "**/__stories__/**, **/*.stories.*"        # stories (covered by addon-a11y + storybook-docs gate)
+    - "**/__specs__/**"                          # yaml/md specs, not code
+    - "**/*.config.*, **/*.d.ts"                 # config + type-only decls (no runtime)
+  banned: adding ANY source file to not_measured to dodge the bar; only the four non-product-code classes above are out. Can't reach 100%? refactor for testability (e.g. FKs → foreignKey() form) — never exclude
+  see: STANDARDS_COMPLIANCE.yaml
+
+# ---------- red/green TDD ----------
+
+tdd:
+  rule: write the failing test FIRST; observe red; write minimum code to pass; observe green
+  banned: code-first then test (even if the resulting test passes)
+  exception: a test for an existing untestable function may be added during a refactor-to-testability slice without prior red — note in the commit
+
+# ---------- test stack ----------
+
+stack:
+  unit_integration: Vitest                       # native ESM + TS
+  e2e_scripted: Playwright                       # cross-browser, free parallelization
+  live_browser_walkthrough: Puppeteer            # AI-agent-driven ad-hoc; alongside Playwright (not instead)
+  manual_api_explorer: Swagger UI                # Chrome-extension agent drives this
+  http_mocks: MSW                                # intercepts at fetch/undici layer
+  postgres_test_db: pglite                       # in-memory; fresh per suite
+  mongodb_test_db: mongodb-memory-server         # in-memory; fresh per suite
+
+# ---------- permission-aware tests ----------
+
+permission_aware_tests:
+  rule: every test that touches a service / repository / route MUST mint a real iAuthorizedPrincipal<TSlug>
+  banned:
+    - hand-rolled fake principals
+    - '"as iAuthorizedPrincipal" casts in tests'
+  use: the `mintPrincipal` producer + appropriate slugs
+  see: AUTHORIZATION_STANDARDS.yaml
+
+# ---------- mock seed data ----------
+
+mock_seed:
+  shared_baseline:
+    location: src/features/shared/mocks/seed.ts
+    purpose: app-wide baseline (default user, default tenant, etc.)
+  per_feature:
+    location: src/features/<name>/mocks/seed.ts
+    purpose: fixtures specific to the feature under test
+  ephemeral_db: per-suite fresh pglite / mongodb-memory-server instance
+
+# ---------- mocks: DI for code-i-own, MSW for code-i-don't ----------
+
+mocking_doctrine:
+  code_i_own:
+    pattern: inject dependencies as interfaces (fetchImpl, clock, rng, hasher)
+    test: pass vi.fn() or fake adapter at construction
+    rule: PREFERRED over MSW for code I author
+  code_i_don_t_own:
+    pattern: MSW handlers
+    test: server.use(http.<method>(path, handler)) per scenario
+    rule: PREFERRED when the call goes through globalThis.fetch via a library I can't refactor
+  banned:
+    - vi.mock("module") for module-level mocking (last-resort signal)
+    - LOCAL_DEV_FORCE_ALL_MOCKS_ON-style runtime toggle infrastructure (UI-app concept; not part of API-first standard)
+
+# ---------- every exported function has a test ----------
+
+every_export_tested:
+  rule: every exported behavior function has ≥ 1 unit test
+  test_names: human-readable behavior descriptions, not "test 3"
+  required_per_function:
+    - happy-path
+    - every declared error path (from flow.yaml.throws)
+    - every distinct edge case (from flow.yaml.paths.edge_*)
+
+# ---------- naming + ids ----------
+
+naming:
+  see: TEST_NAMING.yaml                          # path-derived global test IDs (unit:<feature-path>/...); discovery globs
+
+# ---------- storybook component testing (two-way coverage) ----------
+
+storybook_component_testing:
+  applies_when: a feature ships a UI component with stories
+  playground_story:
+    rule: every prop is a control in the Storybook controls sidebar — EXCEPT function props
+    function_props: wired to the Storybook `actions` panel (so an agent confirms the callback fires with the right args)
+    consequence: every prop value + every callback is reachable and observable from the story alone
+  two_way_coverage:
+    rule: every control AND every scenario a component supports is verifiable BOTH ways
+    way_1: a unit test
+    way_2: the Claude Code Chrome Extension operating the Playground story (set control / trigger action / read result)
+  ids: component cases follow TEST_NAMING (unit:<feature-path>/<Component>/<case>)
+
+# ---------- refactor to testability ----------
+
+refactor_to_testability:
+  rule: untestable function = hidden coupling; refactor by injecting the dependency as an interface
+  hidden_dependencies_to_inject:
+    - Date.now() / new Date() → inject clock
+    - fetch() → inject fetcher
+    - Math.random() → inject rng
+    - process.env.X → inject env reader (or pass the value)
+    - fs.readFileSync() → inject fs port
+  banned:
+    - lowering the coverage threshold
+    - '"/* istanbul ignore */" annotations'
+    - adding files to coverage exclusion lists
+
+# ---------- independent scenario enumeration ----------
+
+scenario_enumeration:
+  rule: walk the CODE PATH; don't transcribe the request
+  per_operation_categories:
+    - happy path
+    - input validation failure
+    - DB constraint violation (uniqueness / FK / check / NOT NULL / partial-index)
+    - connection failure (pool exhausted / network drop / statement timeout)
+    - operation cancellation (request aborted / container SIGTERM mid-flight)
+    - concurrent caller (two requests at the same instant)
+    - TOCTOU race (read-then-write)
+    - partial-state on multi-write (write A succeeds, write B fails)
+    - authorization boundary (was the caller permitted?)
+    - idempotency (same call arrives twice)
+    - time-based (token expiry, rate-limit window edges, DST, leap-second)
+  on_unhandled_scenario: STOP and surface (see PROCESS_DISCIPLINE.yaml); never silently leave ❌
+
+# ---------- every surface has a REAL E2E (required for "done") ----------
+
+e2e_per_surface:
+  authority: E2E_TESTING.yaml                    # E2E structure (scenario/flow folders), placement, db-safety, seeding, run modes live there. THIS section keeps only the unit-standard gate: a feature is not done until its E2E is green.
+  rule: every flow that exercises business logic has ≥ 1 real end-to-end test that drives it through its ACTUAL surface and asserts the persisted side-effect. A feature is NOT done until this E2E exists and is green — no matter how green the unit tests are.
+  driven_through_the_real_transport: the E2E goes over the wire / through the browser. Calling a route handler or service function in-process is INTEGRATION, not E2E, and does NOT satisfy this rule. 200 OK / a returned value without a verified DB change is the silent-failure mode this rule exists to catch.
+  two_modes_by_surface:
+    api_only:
+      applies_when: "the app is UI-deferred / API-only (autonomy.yaml ui_discipline: none, or a phase that ships no UI yet)"
+      how: boot the real server on a dedicated port and call the HTTP route(s) with real HTTP requests (fetch/curl) — not in-process handler calls
+      example_harness: a node script wired into `pnpm e2e` that spawns the server, polls readiness, hits the endpoints, asserts, tears down
+    ui_present:
+      applies_when: "the app ships any UI surface (autonomy.yaml ui_discipline: crappy-permitted | full)"
+      how: drive the real UI in a browser via Puppeteer (gate 2 / verify:full) and/or Playwright (gate 1) — click/type the actual flow a user would. Even when the same operation also has an HTTP route, the user-facing flow is exercised FROM THE UI, not only via the API.
+  must_assert:
+    - transport — the response shape / the rendered result the caller sees
+    - state_added — query the DB directly and confirm the expected row(s) were created (and updated rows reflect the change)
+    - state_removed_on_teardown — after cleanup, query again and confirm 0 rows remain (proves isolation + no leakage)
+  isolation:
+    rule: each E2E run is self-contained and idempotent — dedicated port, dedicated throwaway tenant/account/test-data ids, seed-with-clean-first, and a finally-block teardown that removes everything it created
+    verify_cleanup: the test asserts post-teardown that its rows are gone (a leaked row fails the run)
+    db: a dedicated test DB (per-run container OR per-suite truncate) where available; otherwise a fully-scoped throwaway tenant that the teardown deletes
+  banned:
+    stub_e2e: an e2e script that echoes / exits 0 without running the flow is FORBIDDEN — it is a lie about coverage
+    in_process_only: claiming E2E while only invoking handlers/services in-process (no real transport)
+    response_only_assertion: asserting the HTTP status / return value without asserting the persisted DB side-effect
+  wired_into: "`pnpm e2e` (gate 1) for api_only HTTP E2E + Playwright UI E2E; `pnpm verify:full` (gate 2) for Puppeteer UI walkthroughs"
+  folder_location: e2e/ at top level, parallel to src/ (api_only HTTP harnesses may live under e2e/ as .e2e.mjs scripts)
+
+# ---------- no orphan markers (bidirectional) ----------
+
+no_orphan_markers:
+  applies_to: data-testid / data-agent-action / data-agent-step / aria-label / state CSS classes
+  rule:
+    - every marker on an element MUST be referenced by ≥ 1 test / selector / __specs__/manual/<flow>.md script
+    - every test / selector MUST point at a marker on a real element
+  banned:
+    - data-testid added but never tested
+    - test selector for a marker no element carries
+    - state CSS class with no element carrying it
+  audit_location: per-feature __specs__/spec.yaml documents markers; cross-feature registers via grep (no central marker-audit.md)
+
+# ---------- computed-style verification ----------
+
+computed_style:
+  rule: state changes a user is supposed to PERCEIVE are verified via getComputedStyle OR screenshot regression
+  banned: classList.contains("active") alone (proves class was added; not that CSS responded)
+  example: |
+    // BANNED:
+    expect(el.classList.contains("active")).toBe(true);
+    // REQUIRED:
+    expect(window.getComputedStyle(el).backgroundColor).toBe("rgb(255, 0, 0)");
+
+# ---------- no theater tests ----------
+
+no_theater_tests:
+  banned_patterns:
+    pattern_a:
+      name: lone .not.toThrow()
+      example: "expect(() => fn()).not.toThrow();  // no other assertion"
+      fix: assert the actual state change / return value
+    pattern_b:
+      name: safety-counter loops
+      example: "while (counter-- > 0 && condition) { ... }  // passes whether or not condition was met"
+      fix: use waitFor / explicit timeout with proper failure
+    pattern_c:
+      name: self-mocked function under test
+      example: "vi.mock(`../<basename>`)  // where basename is the file under test"
+      fix: don't mock the function under test; inject its dependencies instead
+  test_for_theater: if you delete the production code and the test still passes, it's theater
+
+# ---------- two-gate discipline ----------
+
+two_gate_discipline:
+  gate_1:
+    name: pnpm verify
+    invocation: pre-push hook + CI + ad-hoc local
+    runs:
+      - verify-standards-compliance              # presence + freshness; see STANDARDS_COMPLIANCE.yaml
+      - typecheck
+      - lint
+      - test (with --coverage; 100% perFile)
+      - e2e (Playwright)
+      - boot-smoke (when dev server is the deploy target)
+  gate_2:
+    name: pnpm verify:full
+    invocation: LOCAL ONLY (not CI; not GitHub Actions; not pre-push)
+    runs_everything_in_gate_1_plus:
+      - puppeteer walkthroughs against the local dev server
+      - heavy live-DB integration tests
+      - any check that requires the operator to be at the keyboard
+    rule: NEVER run from CI; explicitly local-only
+  exit_required: gate 1 exits 0 before push; gate 2 exits 0 before claiming "fully verified"
+
+# ---------- on the "done" claim ----------
+
+done_claim:
+  rule: NEVER claim done / complete / finished without quoted proof
+  quoted_proof: verbatim final-line output of `pnpm verify` (and `pnpm verify:full` for fully-verified claims)
+  see: STANDARDS_COMPLIANCE.yaml (the lock file is the durable record of done)
+
+last_updated: 2026-07-11T00:00:00Z
