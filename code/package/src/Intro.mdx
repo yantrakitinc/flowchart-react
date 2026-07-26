@@ -4,85 +4,126 @@ import { Meta } from '@storybook/blocks';
 
 # FlowChart React
 
-**A Mermaid-like, AI-first React flowchart.** Describe a diagram in a compact text language (or a
-plain data object) and get a fully interactive, auto-laid-out flowchart where **every node is a real
-React component** — rendered on [React Flow](https://reactflow.dev).
+A React component for visualizing user flows, decision trees, and process diagrams with automatic layout, path detection, and interactive features.
+
+## What It Does
+
+1. **Automatic Layout** - Define your nodes and edges, and the component automatically positions them in a readable left-to-right flow
+2. **Path Detection** - Automatically detects all possible paths from start to end nodes
+3. **Path Selection** - Users can select a specific path to highlight, dimming all other nodes and edges
+4. **Clickable Nodes** - Every node is clickable with customizable click handlers
+5. **Zoom & Pan** - Built-in zoom and pan controls for navigating large flowcharts
+6. **Active Node Highlighting** - Highlight the current/active node in your flow
+
+## Key Features
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Path Drawer</strong></td>
+      <td>A collapsible panel showing all detected paths. Click a path to highlight only those nodes and edges.</td>
+    </tr>
+    <tr>
+      <td><strong>Node Types</strong></td>
+      <td>7 built-in node types: start, end, action, decision, error, warning, link - each with distinct styling</td>
+    </tr>
+    <tr>
+      <td><strong>Edge Types</strong></td>
+      <td>4 edge types: happy (green), error (red), warning (orange), default (gray)</td>
+    </tr>
+    <tr>
+      <td><strong>TypeScript</strong></td>
+      <td>Full TypeScript support with exported types for all interfaces</td>
+    </tr>
+    <tr>
+      <td><strong>Zero Dependencies</strong></td>
+      <td>No external layout libraries - pure React with SVG rendering</td>
+    </tr>
+  </tbody>
+</table>
+
+## How Path Selection Works
+
+1. The component analyzes your flow and detects all unique paths from start nodes to end nodes
+2. A path drawer (positioned top, bottom, left, or right) displays all detected paths
+3. Each path shows its type (happy, error, warning) based on the edges it contains
+4. Clicking a path highlights only the nodes and edges in that path
+5. All other nodes and edges are dimmed for clarity
+6. Click the selected path again (or use the clear button) to show all nodes
+
+## How Node Clicking Works
+
+1. Every node in the flowchart is clickable
+2. Pass an `onNodeClick` callback to receive click events
+3. The callback receives the full node object with id, label, type, and description
+4. Use this to show details, navigate, or trigger actions based on the clicked node
+5. Combine with `activeNodeId` to visually highlight the clicked node
+
+## Package Contents
+
+```
+@yantrakit/flowchart-react
+├── FlowChart        # Main component
+├── usePaths         # Hook to access detected paths programmatically
+├── Types            # TypeScript interfaces (iFlowDefinition, iFlowNode, etc.)
+└── styles           # CSS styles (import separately)
+```
+
+## Quick Start
 
 ```tsx
 import { FlowChart } from '@yantrakit/flowchart-react';
 import '@yantrakit/flowchart-react/styles';
 
-<FlowChart height={480} chart={`flowchart TD
-  start([Order placed]) --> pay{Payment OK?}
-  pay -->|yes| ship[Ship order]
-  pay ==>|no| fail[Payment failed]:::error
-  ship --> done([Delivered])
-  fail --> done`} />
+const flow = {
+  id: 'my-flow',
+  name: 'My Flow',
+  nodes: [
+    { id: 'start', label: 'Start', type: 'start' },
+    { id: 'process', label: 'Process', type: 'action' },
+    { id: 'end', label: 'End', type: 'end' },
+  ],
+  edges: [
+    { from: 'start', to: 'process', type: 'happy' },
+    { from: 'process', to: 'end', type: 'happy' },
+  ],
+};
+
+function App() {
+  return (
+    <div style={{ height: '500px' }}>
+      <FlowChart
+        flow={flow}
+        onNodeClick={(node) => console.log('Clicked:', node.label)}
+      />
+    </div>
+  );
+}
 ```
+
+## Requirements
+
+1. **React 18+** - Uses modern React features
+2. **Container Height** - The parent container must have a defined height
+3. **CSS Import** - Import styles separately: `import '@yantrakit/flowchart-react/styles'`
+
+## Next Steps
+
+1. **[Usage Guide](/docs/getting-started-usage--docs)** - Detailed props, types, and examples
+2. **[Interactive Demo](/docs/flowchart-flowchart--docs)** - Try the component with different flows
+3. **[Changelog](/docs/changelog--docs)** - Version history and updates
 
 ---
 
-## What is this package?
-
-Three kinds of tools exist in this space, and each forces a trade-off. This package removes it:
-
-| | Authoring | Interactivity | Auto-layout |
-|---|---|---|---|
-| **Mermaid** | ✅ text (great) | ❌ static SVG | ✅ |
-| **React Flow** | ❌ hand-built objects + positions | ✅ excellent | ❌ (you position nodes) |
-| **@yantrakit/flowchart-react** | ✅ **text _or_ object** | ✅ **React Flow under the hood** | ✅ **dagre / ELK** |
-
-You write **diagram-as-code** like Mermaid, but you get **React-Flow-grade interactivity** — clickable
-custom nodes, drag, zoom, pan, minimap — plus something neither gives you: **semantic path detection**
-(automatically find and color the happy / warning / error routes through a graph).
-
-## Why "AI-first"?
-
-Everything an agent needs is a first-class, no-React surface:
-
-- **Text in, text out.** `parseFlowchart(text)` → graph object; `serializeFlowchart(graph)` → text. An
-  agent (or an LLM) can read a diagram, mutate the object, and write valid diagram text back.
-- **A published JSON Schema** for the graph shape (`@yantrakit/flowchart-react/schema`) so a tool can
-  validate a diagram without importing any TypeScript.
-- **Stable selectors** on every rendered element (`data-testid`, `data-node-id`, `data-agent-action`)
-  so an agent or a test can drive the UI deterministically.
-
-## How it works — five small layers
-
-```
-  text DSL ─▶  parse  ─▶  IR (graph)  ─▶  layout  ─▶  render (React Flow)
-  "flowchart              the single       dagre or      custom nodes,
-   TD ..."                source of        ELK; honors   edges, minimap,
-                          truth            TD/LR/BT/RL   path drawer
-   graph object ────────▶     │
-                              └─▶  path model  ──▶  happy / warning / error
-```
-
-Only the render layer touches React. `parse`, `layout`, and the path model are pure TypeScript you can
-use headless (Node scripts, build tools, agents).
-
-## Node & edge vocabulary
-
-**7 node types** — each has a shape + a status color:
-
-| Type | Meaning | Shape |
-|---|---|---|
-| `start` / `end` | entry / exit | stadium (pill) |
-| `action` | a step | rounded rectangle |
-| `decision` | a branch | diamond-ish |
-| `error` / `warning` / `link` | failure / caution / reference | rounded rectangle, status-colored |
-
-**4 edge types** — the edge type colors any path that runs through it:
-
-`happy` (green) · `warning` (amber, dotted) · `error` (red, thick) · `default` (grey)
-
-## Where to go next
-
-- **[Usage](/docs/getting-started-usage--docs)** — install, the full DSL, every prop, headless helpers.
-- **[FlowChart stories](/docs/flowchart-flowchart--docs)** — live, editable examples: text & object
-  authoring, all directions, ELK, custom nodes, theming, controlled path selection, real-world diagrams.
-
-<div style={{ marginTop: '48px', padding: '16px 0', borderTop: '1px solid #3f3f46', fontSize: '14px', color: '#a1a1aa' }}>
-  <a href="https://www.npmjs.com/package/@yantrakit/flowchart-react" style={{ color: '#cb3837', textDecoration: 'none', fontWeight: 600 }}>npm</a>
-  &nbsp;·&nbsp; Part of <a href="https://yantrakit.com" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600 }}>Yantrakit</a>
+<div style={{ marginTop: '60px', padding: '20px', borderTop: '1px solid #3f3f46', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '14px', color: '#a1a1aa' }}>
+  <a href="https://www.npmjs.com/package/@yantrakit/flowchart-react" target="_blank" style={{ color: '#cb3837', textDecoration: 'none', fontWeight: 500 }}>npm</a>
+  <span style={{ color: '#52525b' }}>•</span>
+  <span>Part of</span>
+  <a href="https://yantrakit.com" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 500 }}>Yantrakit</a>
 </div>
