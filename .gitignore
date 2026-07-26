@@ -6,3 +6,13 @@ storybook-static/
 .env
 .env.local
 coverage/
+
+# >>> install-slice-gates: vendored .claude subpaths
+# These override the user's global ~/.gitignore_global (which may ignore .claude/).
+# Standards + agents are vendored per-repo so they travel with the codebase.
+!.claude/
+!.claude/standards/
+!.claude/standards/**
+!.claude/agents/
+!.claude/agents/**
+# <<< install-slice-gates

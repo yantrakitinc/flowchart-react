@@ -1,0 +1,35 @@
+feature_name: scripts-verify-no-server-imports
+version: 1
+operation:
+  name: G-CLIENT-SERVER-BOUNDARY — client modules never reach server-only code
+  slug: "(internal)"
+  description: |
+    Mechanical implementation of the RSC client/server boundary rule
+    from PROJECT_ARCHITECTURE.yaml `single_app_shape`. Builds the import
+    closure of every `"use client"` entry under `src/` and fails if any
+    server-only module (src/db/*, repositories, src/features/*/services|
+    handlers/*, or anything importing `server-only`) is reachable from it.
+    Non-overridable per RULE 0.
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: pre-push / pre-commit boundary check; pnpm verify chain
+  when_not_to_call: mid-feature work — partial code may legitimately stage incomplete imports
+  natural_language_examples:
+    - "run G-CLIENT-SERVER-BOUNDARY"
+    - "check no client module reaches server-only code"
+  confirm_before: "none — read-only"
+  summarize_after_success: "verify-no-server-imports: PASS — no server-only module reachable from a \"use client\" entry."
+  summarize_after_failure: "verify-no-server-imports: <N> violation(s) — quote the per-line breakdown verbatim"
+cross_cutting:
+  wcag: "n/a — CLI"
+  auth: "filesystem only"
+  mobile: "n/a — CLI"
+  i18n: "operator-log English-only"
+links:
+  flows:
+    - flows/run-audit.flow.yaml
+  tests:
+    - __tests__/verify-no-server-imports.test.mjs

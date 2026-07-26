@@ -1,0 +1,56 @@
+flow: loadElk
+kind: helper
+source: src/layout/elkEngine.ts
+symbol: loadElk
+
+inputs:
+  importer: "optional () => Promise<{ default: iElkCtor }> — overrides the default dynamic import of 'elkjs/lib/elk.bundled.js'; the DI seam used by tests to avoid depending on the real optional package"
+
+returns:
+  - "Promise<iElkCtor> — the ELK constructor (importer's resolved `.default`) on success"
+
+throws:
+  - "Error(\"elkEngine requires the optional peer dependency 'elkjs'. Install it with `pnpm add elkjs`.\") — when the importer (default or injected) rejects for any reason"
+
+calls:
+  - "importer() (defaultImporter's dynamic import(), or the caller-supplied importer)"
+
+called_by:
+  - "elkEngine.run"
+
+emits_events: []
+
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none — the returned promise rejects; the original underlying error is discarded in favor of the clear, actionable message (not chained/wrapped)"
+transaction: none
+
+test: src/layout/engines.test.ts
+spec: src/layout/__specs__/spec.yaml
+
+ai_agent_action:
+  when_to_call: "Not called directly by an agent — reached only through elkEngine.run(); exported primarily for direct unit testing of the import-failure path."
+  when_not_to_call: "n/a — internal helper"
+  natural_language_examples: []
+  agent_invocation: "internal — not a public entry point; loadElk is exported directly from elkEngine.ts for direct unit testing, but is NOT re-exported by index.ts's public barrel"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "n/a"
+
+paths:
+  happy:
+    - "importer argument omitted -> defaultImporter() runs `import('elkjs/lib/elk.bundled.js')`"
+    - "importer resolves { default: <ELK ctor> } -> loadElk returns that ctor"
+  edge_custom_importer_injected:
+    - "a fake importer is passed (e.g. `() => Promise.resolve({ default: FakeElk })`) -> loadElk returns FakeElk without ever touching the real 'elkjs' package — this is the seam engines.test.ts uses to test elkEngine without the optional dependency installed"
+  error_import_rejects:
+    - "the importer (default or injected) rejects/throws for any reason (module not installed, resolution failure, etc.)"
+    - "the catch block discards the original error and throws the single clear, actionable Error naming the missing peer dependency and the install command"
+
+mermaid: |
+  flowchart TD
+    A[loadElk importer?] --> B{importer provided?}
+    B -->|no| C[defaultImporter: import elkjs/lib/elk.bundled.js]
+    B -->|yes| D[call injected importer]
+    C --> E{resolves?}
+    D --> E
+    E -->|yes| F[return resolved.default as ELK ctor]
+    E -->|no, throws| G[throw clear elkjs-missing Error]

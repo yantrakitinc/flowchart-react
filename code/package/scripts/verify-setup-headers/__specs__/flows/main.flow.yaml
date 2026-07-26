@@ -1,0 +1,41 @@
+flow: main
+kind: composition-root
+source: scripts/verify-setup-headers/verify-setup-headers.mjs
+symbol: main
+inputs:
+  io: optional IO injection (src / listFiles / readFile / existsSync / write / writeErr)
+returns:
+  - "{ exitCode: 0 }"
+  - "{ exitCode: 1 }"
+throws: []
+calls:
+  - audit
+  - formatReport
+called_by:
+  - cliMain
+  - scripts/verify-mode-compliance.mjs
+emits_events: []
+side_effects_on_success:
+  - "stdout: 'verify-setup-headers: OK (<N> required setup file(s) checked)'"
+side_effects_on_failure: "stderr emits one summary line + one MISSING/UNEXPECTED line per offender; process exits 1"
+transaction: none
+test: scripts/verify-setup-headers/__tests__/verify-setup-headers.test.mjs
+spec: scripts/verify-setup-headers/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "Whenever the user asks 'are the SETUP headers in good shape?' or as part of pnpm verify."
+  when_not_to_call: "Mid-feature work where new schema / port files may not yet carry the marker."
+  natural_language_examples:
+    - "verify setup headers"
+  agent_invocation: "internal — invoked by scripts/verify-mode-compliance.mjs"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "Quote stdout/stderr verbatim."
+paths:
+  happy:
+    - audit walks src/, every required file carries the marker
+    - zero issues → OK stdout, exitCode 0
+  error_issues_found:
+    - audit collects one or more MISSING / UNEXPECTED issues
+    - formatReport emits summary + per-issue lines on stderr; exitCode 1
+  error_src_missing:
+    - src/ does not exist on disk
+    - formatReport emits 'missing src' on stderr; exitCode 1

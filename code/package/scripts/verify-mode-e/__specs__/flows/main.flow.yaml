@@ -1,0 +1,38 @@
+flow: main
+kind: helper
+source: verify-mode-e.mjs
+symbol: main
+inputs:
+  io: optional IO ports — rootDir / findLocks / spawn / execPath / modeAPath / write / writeErr
+returns:
+  - "{ exitCode: 0 | 1, slices: string[], perSliceStatus: Array<{ slice: string, status: number }> }"
+throws: []
+calls:
+  - findAllLocks (scripts/verify-mode-inspect/verify-mode-inspect.mjs)
+  - slicesFromLocks (local helper)
+  - spawnSync (node:child_process) — spawns verify-mode-a.mjs per slice
+called_by:
+  - cliMain
+  - scripts/verify-mode-verify-all/verify-mode-verify-all.mjs (composed for the deep-ceremony loop)
+emits_events: []
+side_effects_on_success: ["each per-slice Mode A invocation rewrites its standards-compliance.yaml lock"]
+side_effects_on_failure: ["partial re-stamps; slices that failed Mode A keep status:unlocked"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: full-repo re-stamp after a sweeping change
+  when_not_to_call: scoped updates (Mode A / C) or validators
+  natural_language_examples:
+    - "mode E"
+    - "re-stamp the entire repo"
+  agent_invocation: "internal — `node scripts/verify-mode-e/verify-mode-e.mjs`"
+  confirm_with_user_before: "yes — mutates every lock"
+  summarize_to_user_after: "Mode E verdict + per-slice pass/fail counts"
+paths:
+  happy:
+    - findLocks returns N locks → slicesFromLocks dedups to S slices
+    - per-slice Mode A spawn exits 0; all stamps refreshed; aggregate exit 0
+  edge_no_locks:
+    - findLocks returns []; print "no locks" + exit 0
+  error_one_slice_fails:
+    - Mode A returns non-zero for one slice; aggregate exit 1; other slices still re-stamped

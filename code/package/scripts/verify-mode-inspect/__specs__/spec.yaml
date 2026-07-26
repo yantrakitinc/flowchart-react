@@ -1,0 +1,28 @@
+feature_name: scripts-verify-mode-inspect
+version: 1
+operation:
+  name: Verifier Mode Inspect — read-only walk of every lock
+  slug: "(internal)"
+  description: Read-only inspection. Walks every `<...>/__specs__/standards-compliance.yaml` in the repo and reports relative path, status (locked / unlocked / other), last_validated stamp, and freshness vs source (fresh / stale / unknown). No mutations. No code execution beyond `git log` (via verify-standards-freshness). Always exits 0; the operator decides what to do with the report.
+invocation:
+  type: internal
+  method: ""
+  path: ""
+chat_agent:
+  when_to_call: routine state walk OR before deciding which mode to invoke next
+  when_not_to_call: actually mutating stamps (use Mode A / C / E) or validating before push (use Mode B / D / F)
+  natural_language_examples:
+    - "show me the state of every lock"
+    - "inspect the verifier stamps"
+    - "what's stale?"
+  confirm_before: "none — read-only"
+  summarize_after_success: "Mode Inspect: <N> lock(s) found — <X> locked, <Y> unlocked, <Z> stale"
+  summarize_after_failure: "n/a — Mode Inspect always exits 0"
+cross_cutting:
+  wcag: "n/a — CLI"
+  auth: "filesystem only"
+  mobile: "n/a — CLI"
+  i18n: "operator-log English-only"
+links:
+  flows:
+    - flows/main.flow.yaml

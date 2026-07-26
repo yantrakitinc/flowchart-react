@@ -1,0 +1,55 @@
+feature_name: ir
+
+scope_authority: user
+
+ui_design: not-applicable
+
+operation:
+  name: IR graph model, type guards & JSON Schema
+  slug: "(internal)"
+  description: The intermediate-representation types (iFlowGraph, iFlowNode, iFlowEdge), the three closed-set literal unions (iNodeType, iEdgeType, iDirection) with their runtime narrowing guards, and the published draft 2020-12 JSON Schema (FLOW_GRAPH_SCHEMA) that every layer (parse, layout, paths, react) and every external agent/tool depends on.
+
+invocation:
+  type: internal
+
+chat_agent:
+  when_to_call: >-
+    An agent or downstream module needs the canonical FlowGraph shape, needs to narrow an
+    untyped value (e.g. a parsed Mermaid class token, a JSON payload from a non-TS caller) to a
+    legal iNodeType / iEdgeType / iDirection before trusting it, or needs the JSON Schema to
+    validate a graph outside TypeScript entirely.
+  when_not_to_call: >-
+    Never call directly from user-facing chat — this is a library-internal type/validation
+    layer, not a user-invokable action. Not for validating a whole graph's structural
+    well-formedness (duplicate ids, dangling edges) — only FLOW_GRAPH_SCHEMA (via an external
+    validator) or a caller's own checks do that; the three guards here narrow single scalar
+    values only.
+  natural_language_examples:
+    - "is 'process' a legal node type?"
+    - "what are all the valid edge types?"
+    - "give me the JSON Schema for a flow graph"
+    - "validate this direction value before I build a graph"
+  confirm_before: "none — read-only, pure functions, no side effects"
+  summarize_after_success: >-
+    "Validated: {value} is / is not a legal {nodeType|edgeType|direction}."
+  summarize_after_failure: >-
+    "n/a — these guards never throw; they only return true or false."
+
+cross_cutting:
+  wcag: "n/a — pure data types + narrowing guards; renders no UI itself"
+  auth: "n/a — internal library code; no DB access, no principal, no permission check"
+  mobile: "n/a — no UI surface; consuming UI components declare their own mobile behavior"
+  i18n: "n/a — label/description on iFlowNode/iFlowEdge are caller-supplied data, not code-owned UI copy; the enums themselves are structural identifiers, never displayed verbatim"
+
+links:
+  flows:
+    - src/ir/__specs__/flows/isNodeType.flow.yaml
+    - src/ir/__specs__/flows/isEdgeType.flow.yaml
+    - src/ir/__specs__/flows/isDirection.flow.yaml
+  tests:
+    - src/ir/types.test.ts
+    - src/ir/schema.test.ts
+  manual:
+    - src/ir/__specs__/manual/isNodeType.md
+    - src/ir/__specs__/manual/isEdgeType.md
+    - src/ir/__specs__/manual/isDirection.md

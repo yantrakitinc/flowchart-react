@@ -8,6 +8,26 @@ All notable changes to this project will be documented here.
 
 ---
 
+## [2.0.0] - 2026-07-26
+
+### Changed (breaking — full rewrite)
+
+- Rebuilt as a **Mermaid-like, AI-first** flowchart rendered on **React Flow** (`@xyflow/react`).
+- **Authoring:** new `chart` (Mermaid-like text) and `graph` (IR object) props. The v1 `flow` prop is **removed**.
+- **Layout:** real hierarchical layout via **dagre** (default) with **ELK** (`elkjs`) as an opt-in engine; honors `TD`/`BT`/`LR`/`RL`.
+- **Nodes:** rich, interactive default node components with a **node-type registry** for full replacement.
+- **Callbacks:** `onNodeClick(id, data)` and `onPathChange(id)`.
+
+### Added
+
+- Standalone `parseFlowchart` / `serializeFlowchart` (round-trip), `detectPaths`, `layout` — all pure, no React.
+- Published JSON Schema for the IR (`@yantrakit/flowchart-react/schema`).
+- `data-testid` / `data-node-id` / `data-agent-action` affordances on every node for tests + AI agents.
+
+See `MIGRATION.md` for the v1 → v2 upgrade path.
+
+---
+
 ## [1.1.3] - 2026-03-14
 
 ### Added

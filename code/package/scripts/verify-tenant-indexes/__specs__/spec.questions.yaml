@@ -1,0 +1,20 @@
+questions:
+  - id: q1
+    question: "What does `pnpm verify:tenant-indexes` actually do?"
+    expected: "It walks every Drizzle schema file under `src/db/`, parses the `pgTable(...)` declaration with narrow regexes, and identifies tenant-scoped tables — non-`users` tables that declare a column named `creator_id`, `tenant_id`, `owner_id`, or `user_id`. For each tenant-scoped table, it asserts at least one index-shaped object (primary key, unique constraint, unique index, or plain index) has the tenant-key column as its LEADING column. If any table fails, the script prints the offender + a copy-pasteable `index(...).on(t.<tenantKey>)` suggestion and exits 1. the tenant-index rule (AUTHORIZATION_STANDARDS.yaml) is the rule's source of truth."
+
+  - id: q2
+    question: "What counts as 'tenant-scoped' under this rule?"
+    expected: "A table whose schema declares a column whose DB-snake name is exactly `creator_id`, `tenant_id`, `owner_id`, or `user_id` — AND whose table name is not in the `EXEMPT_TABLES` allowlist (today: just `users`). The heuristic is intentionally narrow per the tenant-index rule (AUTHORIZATION_STANDARDS.yaml): false-negatives on non-canonical tenant axes (e.g. `youtube_videos.channel_id`) are the explicit cost of a narrow, auditable rule. When a non-canonical axis arrives, the author of the table adds the override to the script + ships the matching composite index in the same migration."
+
+  - id: q3
+    question: "Does the rule require a composite index, or is a single-column index on the tenant key enough?"
+    expected: "A single-column index on the tenant key alone (`index('x_user_id_idx').on(t.userId)`) satisfies the gate. A composite PK / unique / index whose LEADING column is the tenant key also satisfies the gate (the composite-PK shape is what `user_role_permissions` and `user_roles` use today). The hard rule is 'tenant key is the leading column of at least one index-shaped object'; choosing the second column is per-table query-pattern judgment, not gated."
+
+  - id: q4
+    question: "Why is `users` exempt?"
+    expected: "The `users` table is the root identity row in the dashboard's data model. Its tenant axis IS its own `id` column — every other tenant-key column in the schema references back to `users.id`. Asking `users` to carry an `id`-leading composite index would be a tautology; the primary key already covers it. The exemption is hardcoded as a single-entry allowlist (`EXEMPT_TABLES = new Set(['users'])`) so the rule's exception surface is auditable in one line."
+
+  - id: q5
+    question: "What happens when a new tenant-scoped table is added in a PR but the developer forgets the composite index?"
+    expected: "The next `pnpm verify` run (in CI or locally) fails. The script prints: `verify-tenant-indexes: 1 tenant-scoped table(s) lack a tenant-leading index`, then the offending table name, the file path, the detected tenant key column, the index heads it DID see, and a one-line copy-pasteable suggestion in the form `add \`index('<table>_<tenant>_idx').on(t.<camelTenant>)\` (or a composite `.on(t.<camelTenant>, t.createdAt)`) to the table's index closure. See the tenant-index rule (AUTHORIZATION_STANDARDS.yaml).`. The build does not proceed until the index is added."

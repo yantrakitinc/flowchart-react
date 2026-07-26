@@ -1,0 +1,36 @@
+flow: main
+kind: helper
+source: verify-mode-pristine.mjs
+symbol: main
+inputs:
+  io: optional IO ports — stages / pnpm / cwd / spawn / write / writeErr
+returns:
+  - "{ exitCode: 0 | 1, stages: Array<{ name: string, status: number, skipped: boolean }> }"
+throws: []
+calls:
+  - spawnSync (node:child_process) — invokes pnpm <stage> per stage
+called_by:
+  - cliMain
+  - scripts/verify-mode-pristine-and-compliance/verify-mode-pristine-and-compliance.mjs
+  - scripts/verify-mode-verify-all/verify-mode-verify-all.mjs (per-feature inner loop)
+emits_events: []
+side_effects_on_success: ["stdout of each stage relayed to operator"]
+side_effects_on_failure: ["chain stops at first non-zero stage; remaining stages not executed"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: pre-merge code-health check
+  when_not_to_call: stamp-only operations
+  natural_language_examples:
+    - "mode pristine"
+    - "is the code green?"
+  agent_invocation: "internal — `node scripts/verify-mode-pristine/verify-mode-pristine.mjs`"
+  confirm_with_user_before: "none — but warn about minutes-long runtime"
+  summarize_to_user_after: "Mode Pristine verdict + per-stage exit codes"
+paths:
+  happy:
+    - typecheck 0 → build 0 → lint 0 → unit 0 → e2e 0 (or skipped); exit 0
+  error_stage_fail:
+    - any non-optional stage returns non-zero; chain stops; aggregate exit 1
+  edge_optional_skipped:
+    - e2e spawn errors (script missing); stage marked skipped:true; chain continues

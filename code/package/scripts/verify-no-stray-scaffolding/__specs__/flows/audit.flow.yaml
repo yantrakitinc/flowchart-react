@@ -1,0 +1,43 @@
+flow: audit
+kind: service-method
+source: scripts/verify-no-stray-scaffolding/verify-no-stray-scaffolding.mjs
+symbol: audit
+inputs:
+  roots: array of absolute root paths to walk
+  injected: optional { listDirs, listFiles } injection
+returns:
+  - "{ strays: Array<{ path, kind, detail }> }"
+throws: []
+calls:
+  - listAllDirs (default)
+  - listAllFiles (default)
+  - isInsideBackupFolder
+  - classifyDirStray
+  - classifyFileStray
+called_by:
+  - main
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: scripts/verify-no-stray-scaffolding/__tests__/verify-no-stray-scaffolding.test.mjs
+spec: scripts/verify-no-stray-scaffolding/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only main composes audit"
+  when_not_to_call: "external callers; this is a pure helper"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy:
+    - for each root, walk every directory and file
+    - skip anything inside `__specs__.backup/`
+    - classify each remaining dir/file; collect strays
+    - return the aggregated list
+  edge_empty_roots:
+    - roots is empty
+    - return { strays: [] }
+  edge_all_skipped:
+    - every dir / file lives inside __specs__.backup/
+    - return { strays: [] }

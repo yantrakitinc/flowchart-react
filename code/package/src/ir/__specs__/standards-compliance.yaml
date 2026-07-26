@@ -1,0 +1,73 @@
+status: locked
+verified: "100%"
+last_validated: "2026-07-26T00:00:00Z"
+feature: src/ir
+
+standards:
+  ACCESSIBILITY: NOT REQUIRED   # no UI/DOM rendered by this module; pure types + JSON Schema
+  AGENT_AFFORDANCES: NOT REQUIRED   # no data-testid/aria-label DOM surface; agent-facing contract is the exported TS API + FLOW_GRAPH_SCHEMA, covered by spec.yaml/spec.md
+  API_ENVELOPE: NOT REQUIRED   # no HTTP endpoint in this feature
+  API_FIRST: NOT REQUIRED   # no service/API layer; pure IR data model consumed in-process
+  API_SURFACE: NOT REQUIRED   # no HTTP route or server action
+  AUTHORIZATION_STANDARDS: NOT REQUIRED   # no DB, no permission-gated mutation; pure in-memory types/guards
+  BRANCHES_AND_COMMITS: NOT REQUIRED   # repo-wide git-workflow standard, not a per-feature code contract
+  BROWSER_VALIDATION: NOT REQUIRED   # no UI touched by this feature
+  CODE_DOCUMENTATION: 100%   # every export in types.ts/schema.ts carries JSDoc; index.ts is a pure re-export barrel
+  COMPONENT_CREATION: NOT REQUIRED   # no UI atomic component
+  COMPONENT_DOCS: NOT REQUIRED   # no component readme/usage doc; this is a type/schema module
+  COMPONENT_FOLDERS: NOT REQUIRED   # not a components/ui tree entry
+  COMPONENT_LIBRARY_DOCTRINE: NOT REQUIRED   # no MUI/shadcn primitive concerned
+  COMPOSITE_CREATION: NOT REQUIRED   # no UI composite
+  CONTEXT_ECONOMY: NOT REQUIRED   # agent-dispatch/session-budget discipline, not a per-feature code contract
+  DECISION_LOG: NOT REQUIRED   # this backfill required no ambiguous user ruling; nothing to log
+  DESIGN_TOKENS: NOT REQUIRED   # no CSS/token usage; pure data types
+  E2E_TESTING: NOT REQUIRED   # no HTTP/UI runtime surface to drive E2E; fully verified via unit tests
+  ENV_VARS: NOT REQUIRED   # no environment variables read or used
+  FLOW_CONTRACT: 100%   # 3 exported functions each carry an exhaustive flows/<fn>.flow.yaml (happy + edge_boundary_*; no error_/authority/partial-state/concurrent paths apply — the guards never throw, write, or check authority)
+  GOOGLE_FIREBASE_STANDARDS: NOT REQUIRED   # no Firebase usage
+  HEXAGONAL_ARCHITECTURE: NOT REQUIRED   # no service/repository/DI/composition-root; this IS the pure domain model other layers depend on, with zero I/O of its own
+  I18N: NOT REQUIRED   # no user-facing string literals owned by this code; label/description are caller-supplied data
+  INDUSTRY_STANDARDS_STACK: 100%   # FLOW_GRAPH_SCHEMA is a JSON Schema draft 2020-12 document, a named standard in this catalog
+  ISSUES: NOT REQUIRED   # GitHub issue-process standard, not a per-feature code contract
+  LABS: NOT REQUIRED   # no /labs visual sandbox surface; no UI to auto-play
+  LOCAL_DEV_NETWORK: NOT REQUIRED   # no dev server/port for this module
+  LOCK_FILES: 100%   # this file conforms to the minimal schema (status/verified/last_validated/feature/standards)
+  LOGGING: NOT REQUIRED   # pure functions; no logging call sites
+  MANUAL_FLOWS: NOT REQUIRED   # no HTTP/CLI/UI surface (this standard's mandatory scope); library-usage playbooks under manual/ authored anyway as an agent-affordance bonus, not the mandated surface
+  MOBILE_FIRST: NOT REQUIRED   # no UI viewport
+  MOCKING_DOCTRINE: NOT REQUIRED   # pure functions with zero dependencies; nothing to mock, no module-mock present
+  NAMING: 100%   # i-prefixed types (iNodeType et al.), ALL_CAPS constants (NODE_TYPES et al.), camelCase guards (isNodeType et al.)
+  NO_THEATER_TESTS: 100%   # tests assert real guard/schema behavior, no stubbed no-op tests
+  PACKAGE_PROJECT_STANDARDS: 100%   # src/ir/ lives inside this published npm package's package/ layout (@yantrakit/flowchart-react)
+  PAGE_CREATION: NOT REQUIRED   # no page/surface tier
+  PROCESS_DISCIPLINE: 100%   # spec scoped to exactly the three existing files; no speculative additions
+  PROJECT_ARCHITECTURE: NOT REQUIRED   # scoped to a single Next.js app shape with SSR auth/DB; this is a framework-agnostic published library with no server layer
+  PULL_REQUESTS: NOT REQUIRED   # PR lifecycle standard, not a per-feature code contract
+  README_CONTRACT: NOT REQUIRED   # repo-level README.yaml already exists; not restated per-feature
+  REPO_GATE_INSTALLATION: NOT REQUIRED   # hook/installer mechanics, repo-wide
+  REPO_PROVISIONING: NOT REQUIRED   # GH/project-board provisioning, repo-wide
+  REQUIREMENTS_CONTRACT: NOT REQUIRED   # reproducibility backfill of already-shipped code, not a net-new user-negotiated requirement
+  ROOT_LAYOUT: NOT REQUIRED   # repo-root folder contract, not per-feature
+  SCENARIO_ENUMERATION: 100%   # every reachable branch of each guard (member vs non-member, string vs non-string) is enumerated in the flow's paths; no unhandled branch
+  SELF_HARDENING: NOT REQUIRED   # repo-wide learning-loop practice, not a per-feature code contract
+  SITE_BLUEPRINT: NOT REQUIRED   # no page-tier site
+  SOURCE_COVERAGE: 100%   # every src file (types.ts, schema.ts, index.ts) resolves to this spec
+  SOURCE_FOLDERS: 100%   # src/ir/ is a self-contained top-level src/ subfolder, no padding folders, tests co-located with source
+  SPEC_CONTRACT: 100%   # this __specs__/ folder matches the required layout + spec.yaml/spec.md partition
+  STACK: NOT REQUIRED   # repo-level stack choice (React library, not Next.js) already documented at README.yaml/PACKAGE_PROJECT_STANDARDS level; not a per-feature decision
+  STANDARDS_CREATION_STANDARDS: NOT REQUIRED   # governs how standards docs themselves are authored
+  STATE_VOCABULARY: NOT REQUIRED   # no CSS state classes; not a UI component
+  STORYBOOK_SETUP: NOT REQUIRED   # no Storybook story shipped by this module
+  STORYBOOK_TESTING: NOT REQUIRED   # no component to story-test
+  STORY_FORMAT: NOT REQUIRED   # no story file
+  SUPERPOWERS: NOT REQUIRED   # plugin/skill catalog, not invoked for this slice
+  TEST_NAMING: 100%   # types.test.ts / schema.test.ts follow the repo's established co-located unit-test naming/placement pattern
+  TEST_STACK: 100%   # Vitest is the correct/only tool for this pure in-process unit-test job, matching the rest of the repo
+  TYPESCRIPT_HYGIENE: 100%   # strict TS, no `any`, no `@ts-ignore`, types co-located in types.ts with a clean export barrel in index.ts
+  UNIT_COVERAGE: 100%   # every export exercised by types.test.ts/schema.test.ts, covering every guard's true/false branches and the schema's exact-match + required-fields assertions
+  USER_JOURNEYS: NOT REQUIRED   # no user-facing journey; internal data contract consumed by other layers, not a step in an outside-in user journey
+  UTC_TIMESTAMPS: NOT REQUIRED   # iFlowGraph carries no timestamp fields
+  VERCEL_STANDARDS: NOT REQUIRED   # this repo deploys via Cloudflare/npm publish, not Vercel
+  VERIFIER_MODES: NOT REQUIRED   # verifier-mode catalog is the verifier agent's own concern, not this feature's
+  VERIFY_MANUAL_STORIES: NOT REQUIRED   # no per-component Verify-Manual story; not a UI component
+  WRITING_ORDER: 100%   # spec-phase artifacts authored per the three-phase order, backfilled against the already-shipped, already-tested source

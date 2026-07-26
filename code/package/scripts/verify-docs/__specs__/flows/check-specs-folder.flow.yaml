@@ -1,0 +1,49 @@
+flow: checkSpecsFolder
+kind: service-method
+source: scripts/verify-docs/verify-docs.mjs
+symbol: checkSpecsFolder
+inputs:
+  specsDir: absolute path ending in /__specs__
+  relPath: display path for error reporting
+  srcDir: absolute src root for module-level detection
+  injected: optional { existsSync / readDir / statFile } injection
+returns:
+  - "string[] — array of error messages (empty when folder is compliant)"
+throws: []
+calls:
+  - existsSync (default)
+  - readDir (default)
+  - statFile (default)
+  - isModuleLevelSpecsDir
+called_by:
+  - audit
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: "none"
+transaction: none
+test: scripts/verify-docs/__tests__/verify-docs.test.mjs
+spec: scripts/verify-docs/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only audit calls this"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy:
+    - spec.md exists; module-level lock/scorecard requirement satisfied; flows/ (if present) has at least one *.flow.md or *.flow.yaml
+    - return []
+  error_missing_spec_md:
+    - spec.md is absent
+    - return ['MISSING spec.md in <rel>']
+  error_module_missing_both_lock_and_cc:
+    - dir is module-level (src/features/<m>/__specs__/) and neither CODE_CONFIDENCE.md nor standards-compliance.yaml exists
+    - return ['MISSING CODE_CONFIDENCE.md OR standards-compliance.yaml in <rel> ...']
+  edge_module_with_lock:
+    - module-level dir has standards-compliance.yaml → no error even without CODE_CONFIDENCE.md
+  edge_non_module:
+    - dir is a sub-feature __specs__/ (not module-level) → CODE_CONFIDENCE.md requirement does NOT apply
+  error_empty_flows_dir:
+    - flows/ exists and is a directory but contains zero *.flow.md / *.flow.yaml files
+    - return ['MISSING at least one *.flow.md | *.flow.yaml in <rel>/flows/']

@@ -4,482 +4,86 @@ import { Meta } from '@storybook/blocks';
 
 # @yantrakit/flowchart-react
 
-A React flowchart component with auto-layout, path detection, and interactive features.
+A Mermaid-like, AI-first React flowchart. Author diagrams as **text** (diagram-as-code) or as an
+**object**, rendered on React Flow with a real interactive UI per node and semantic path
+detection (happy / warning / error paths).
 
 ## Installation
 
 ```bash
-npm install @yantrakit/flowchart-react
-# or
 pnpm add @yantrakit/flowchart-react
-# or
-yarn add @yantrakit/flowchart-react
+# peers: react >=18, react-dom >=18 · optional: elkjs (for the ELK layout engine)
 ```
-
-## Props
-
-<table>
-  <thead>
-    <tr>
-      <th>Prop</th>
-      <th>Type</th>
-      <th>Required</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>flow</code></td>
-      <td><code>iFlowDefinition</code></td>
-      <td>Yes</td>
-      <td>The flow definition containing nodes and edges</td>
-    </tr>
-    <tr>
-      <td><code>config</code></td>
-      <td><code>iLayoutConfig</code></td>
-      <td>No</td>
-      <td>Layout configuration (node size, spacing, padding)</td>
-    </tr>
-    <tr>
-      <td><code>activeNodeId</code></td>
-      <td><code>string</code></td>
-      <td>No</td>
-      <td>ID of the currently active/highlighted node</td>
-    </tr>
-    <tr>
-      <td><code>selectedPathId</code></td>
-      <td><code>string</code></td>
-      <td>No</td>
-      <td>ID of the selected path to highlight</td>
-    </tr>
-    <tr>
-      <td><code>onNodeClick</code></td>
-      <td><code>(node: iFlowNode) =&gt; void</code></td>
-      <td>No</td>
-      <td>Callback when a node is clicked</td>
-    </tr>
-    <tr>
-      <td><code>onPathChange</code></td>
-      <td><code>(pathId: string | null) =&gt; void</code></td>
-      <td>No</td>
-      <td>Callback when path selection changes</td>
-    </tr>
-    <tr>
-      <td><code>pathDrawerPosition</code></td>
-      <td><code>'top' | 'bottom' | 'left' | 'right'</code></td>
-      <td>No</td>
-      <td>Position of the path selector drawer</td>
-    </tr>
-    <tr>
-      <td><code>className</code></td>
-      <td><code>string</code></td>
-      <td>No</td>
-      <td>Additional CSS class for the container</td>
-    </tr>
-  </tbody>
-</table>
-
-## Basic Usage
 
 ```tsx
 import { FlowChart } from '@yantrakit/flowchart-react';
-import '@yantrakit/flowchart-react/styles';
-
-const flow = {
-  id: 'my-flow',
-  name: 'My Flow',
-  nodes: [
-    { id: 'start', label: 'Start', type: 'start' },
-    { id: 'process', label: 'Process Data', type: 'action' },
-    { id: 'end', label: 'End', type: 'end' },
-  ],
-  edges: [
-    { from: 'start', to: 'process', type: 'happy' },
-    { from: 'process', to: 'end', type: 'happy' },
-  ],
-};
-
-function App() {
-  return (
-    <div style={{ height: '600px' }}>
-      <FlowChart flow={flow} />
-    </div>
-  );
-}
+import '@yantrakit/flowchart-react/styles'; // required (bundles React Flow's base CSS)
 ```
 
-## Node Types
-
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Shape</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>start</code></td>
-      <td>Entry point</td>
-      <td>Ellipse (blue)</td>
-    </tr>
-    <tr>
-      <td><code>end</code></td>
-      <td>Exit point</td>
-      <td>Ellipse (green)</td>
-    </tr>
-    <tr>
-      <td><code>action</code></td>
-      <td>Regular action</td>
-      <td>Rectangle (gray)</td>
-    </tr>
-    <tr>
-      <td><code>decision</code></td>
-      <td>Decision point</td>
-      <td>Diamond (yellow)</td>
-    </tr>
-    <tr>
-      <td><code>error</code></td>
-      <td>Error state</td>
-      <td>Rectangle (red)</td>
-    </tr>
-    <tr>
-      <td><code>warning</code></td>
-      <td>Warning state</td>
-      <td>Rectangle (orange)</td>
-    </tr>
-    <tr>
-      <td><code>link</code></td>
-      <td>External link</td>
-      <td>Dashed rectangle (purple)</td>
-    </tr>
-  </tbody>
-</table>
-
-## Edge Types
-
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Color</th>
-      <th>Use Case</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>happy</code></td>
-      <td style={{ color: '#22c55e' }}>Green</td>
-      <td>Success path</td>
-    </tr>
-    <tr>
-      <td><code>error</code></td>
-      <td style={{ color: '#ef4444' }}>Red</td>
-      <td>Error path</td>
-    </tr>
-    <tr>
-      <td><code>warning</code></td>
-      <td style={{ color: '#f59e0b' }}>Orange</td>
-      <td>Warning path</td>
-    </tr>
-    <tr>
-      <td><code>default</code></td>
-      <td style={{ color: '#71717a' }}>Gray</td>
-      <td>Neutral path</td>
-    </tr>
-  </tbody>
-</table>
-
-## Node Properties
-
-<table>
-  <thead>
-    <tr>
-      <th>Property</th>
-      <th>Type</th>
-      <th>Required</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>id</code></td>
-      <td><code>string</code></td>
-      <td>Yes</td>
-      <td>Unique identifier for the node</td>
-    </tr>
-    <tr>
-      <td><code>label</code></td>
-      <td><code>string</code></td>
-      <td>Yes</td>
-      <td>Display text shown in the node</td>
-    </tr>
-    <tr>
-      <td><code>type</code></td>
-      <td><code>iNodeType</code></td>
-      <td>Yes</td>
-      <td>Node type (start, end, action, decision, error, warning, link)</td>
-    </tr>
-    <tr>
-      <td><code>description</code></td>
-      <td><code>string</code></td>
-      <td>No</td>
-      <td>Optional description (shown on hover)</td>
-    </tr>
-  </tbody>
-</table>
-
-## Edge Properties
-
-<table>
-  <thead>
-    <tr>
-      <th>Property</th>
-      <th>Type</th>
-      <th>Required</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>from</code></td>
-      <td><code>string</code></td>
-      <td>Yes</td>
-      <td>ID of the source node</td>
-    </tr>
-    <tr>
-      <td><code>to</code></td>
-      <td><code>string</code></td>
-      <td>Yes</td>
-      <td>ID of the target node</td>
-    </tr>
-    <tr>
-      <td><code>type</code></td>
-      <td><code>iEdgeType</code></td>
-      <td>No</td>
-      <td>Edge type (happy, error, warning, default)</td>
-    </tr>
-    <tr>
-      <td><code>label</code></td>
-      <td><code>string</code></td>
-      <td>No</td>
-      <td>Text label shown on the edge</td>
-    </tr>
-  </tbody>
-</table>
-
-## Interactive Features
-
-### Handle Node Clicks
+## Author with text
 
 ```tsx
-function App() {
-  const handleNodeClick = (node) => {
-    console.log('Clicked:', node.id, node.label);
-  };
-
-  return (
-    <FlowChart
-      flow={flow}
-      onNodeClick={handleNodeClick}
-    />
-  );
-}
-```
-
-### Path Selection
-
-```tsx
-import { useState } from 'react';
-
-function App() {
-  const [selectedPathId, setSelectedPathId] = useState(null);
-
-  return (
-    <FlowChart
-      flow={flow}
-      selectedPathId={selectedPathId}
-      onPathChange={setSelectedPathId}
-    />
-  );
-}
-```
-
-### Active Node Highlighting
-
-```tsx
-function App() {
-  const [activeNodeId, setActiveNodeId] = useState('process');
-
-  return (
-    <FlowChart
-      flow={flow}
-      activeNodeId={activeNodeId}
-      onNodeClick={(node) => setActiveNodeId(node.id)}
-    />
-  );
-}
-```
-
-## Layout Configuration
-
-```tsx
-<FlowChart
-  flow={flow}
-  config={{
-    nodeWidth: 200,
-    nodeHeight: 80,
-    horizontalSpacing: 200,
-    verticalSpacing: 150,
-    padding: 150,
-  }}
+<FlowChart chart={`flowchart TD
+  start([Start]) --> pay{Payment OK?}
+  pay -->|yes| ship[Ship order]
+  pay ==>|no| fail[Show error]:::error
+  ship --> done([Done])
+  fail --> done`}
 />
 ```
 
-<table>
-  <thead>
-    <tr>
-      <th>Property</th>
-      <th>Type</th>
-      <th>Default</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>nodeWidth</code></td>
-      <td><code>number</code></td>
-      <td>180</td>
-      <td>Width of each node in pixels</td>
-    </tr>
-    <tr>
-      <td><code>nodeHeight</code></td>
-      <td><code>number</code></td>
-      <td>60</td>
-      <td>Height of each node in pixels</td>
-    </tr>
-    <tr>
-      <td><code>horizontalSpacing</code></td>
-      <td><code>number</code></td>
-      <td>150</td>
-      <td>Horizontal space between nodes</td>
-    </tr>
-    <tr>
-      <td><code>verticalSpacing</code></td>
-      <td><code>number</code></td>
-      <td>100</td>
-      <td>Vertical space between levels</td>
-    </tr>
-    <tr>
-      <td><code>padding</code></td>
-      <td><code>number</code></td>
-      <td>100</td>
-      <td>Padding around the entire chart</td>
-    </tr>
-  </tbody>
-</table>
-
-## Path Drawer Position
+## Author with an object
 
 ```tsx
-<FlowChart
-  flow={flow}
-  pathDrawerPosition="left"  // 'top' | 'bottom' | 'left' | 'right'
-/>
-```
-
-## Using the usePaths Hook
-
-```tsx
-import { usePaths } from '@yantrakit/flowchart-react';
-
-function PathList({ flow }) {
-  const { paths, selectedPathId, setSelectedPathId } = usePaths(flow);
-
-  return (
-    <ul>
-      {paths.map((path) => (
-        <li
-          key={path.id}
-          onClick={() => setSelectedPathId(path.id)}
-          style={{ fontWeight: selectedPathId === path.id ? 'bold' : 'normal' }}
-        >
-          {path.name} ({path.type})
-        </li>
-      ))}
-    </ul>
-  );
-}
-```
-
-## TypeScript Types
-
-```tsx
-import type {
-  iFlowDefinition,
-  iFlowNode,
-  iFlowEdge,
-  iNodeType,
-  iEdgeType,
-  iLayoutConfig,
-  iFlowChartProps,
-  iFlowPath,
-  iPathType,
-} from '@yantrakit/flowchart-react';
-```
-
-## Full Example
-
-```tsx
-import { useState } from 'react';
-import { FlowChart } from '@yantrakit/flowchart-react';
-import '@yantrakit/flowchart-react/styles';
-
-const registrationFlow = {
-  id: 'registration',
-  name: 'User Registration',
+<FlowChart graph={{
+  id: 'checkout', name: 'Checkout', direction: 'TD',
   nodes: [
     { id: 'start', label: 'Start', type: 'start' },
-    { id: 'input', label: 'Enter Details', type: 'action' },
-    { id: 'validate', label: 'Valid?', type: 'decision' },
-    { id: 'create', label: 'Create User', type: 'action' },
-    { id: 'error', label: 'Show Errors', type: 'warning' },
-    { id: 'success', label: 'Success', type: 'end' },
+    { id: 'pay', label: 'Payment OK?', type: 'decision' },
+    { id: 'ship', label: 'Ship', type: 'action' },
   ],
   edges: [
-    { from: 'start', to: 'input' },
-    { from: 'input', to: 'validate' },
-    { from: 'validate', to: 'create', type: 'happy', label: 'Yes' },
-    { from: 'validate', to: 'error', type: 'warning', label: 'No' },
-    { from: 'error', to: 'input', type: 'warning' },
-    { from: 'create', to: 'success', type: 'happy' },
+    { id: 'e0', from: 'start', to: 'pay', type: 'default' },
+    { id: 'e1', from: 'pay', to: 'ship', type: 'happy', label: 'yes' },
   ],
-};
-
-function App() {
-  const [selectedPathId, setSelectedPathId] = useState(null);
-  const [activeNodeId, setActiveNodeId] = useState();
-
-  return (
-    <div style={{ height: '100vh' }}>
-      <FlowChart
-        flow={registrationFlow}
-        selectedPathId={selectedPathId}
-        onPathChange={setSelectedPathId}
-        activeNodeId={activeNodeId}
-        onNodeClick={(node) => setActiveNodeId(node.id)}
-      />
-    </div>
-  );
-}
+}} />
 ```
 
----
+## DSL syntax
 
-<div style={{ marginTop: '60px', padding: '20px', borderTop: '1px solid #3f3f46', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '14px', color: '#a1a1aa' }}>
-  <a href="https://www.npmjs.com/package/@yantrakit/flowchart-react" target="_blank" style={{ color: '#cb3837', textDecoration: 'none', fontWeight: 500 }}>npm</a>
-  <span style={{ color: '#52525b' }}>•</span>
-  <span>Part of</span>
-  <a href="https://yantrakit.com" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 500 }}>Yantrakit</a>
-</div>
+| Syntax | Meaning |
+|--------|---------|
+| `flowchart TD` | header — direction `TD` / `BT` / `LR` / `RL` (required; `TB`→`TD`) |
+| `id[Label]` / `id{Label}` / `id([Label])` | action / decision / start-end node |
+| `id:::error` | explicit node type |
+| `A --> B` / `A -.-> B` / `A ==> B` | default / warning / error edge |
+| `A -->\|label\| B` | labeled edge |
+| `A -->\|no\|:::happy B` | explicit edge type override |
+
+## Key props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `chart` | `string` | — | Diagram as DSL text (one of `chart`/`graph` required) |
+| `graph` | `iFlowGraph` | — | Diagram as the IR object |
+| `direction` | `'TD'\|'BT'\|'LR'\|'RL'` | from source | Override layout direction |
+| `layoutEngine` | `iLayoutEngine` | `dagreEngine` | Pass `elkEngine` to opt into ELK |
+| `nodeTypes` | `iNodeRegistry` | rich defaults | Replace node components per type |
+| `activeNodeId` | `string` | — | Highlight one node |
+| `selectedPathId` | `string \| null` | — | Controlled path highlight |
+| `onPathChange` | `(id) => void` | — | Path selection callback |
+| `onNodeClick` | `(id, data) => void` | — | Node click callback |
+| `pathDrawerPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'right'` | Drawer placement |
+| `showPathDrawer` / `showControls` / `showMiniMap` | `boolean` | `true`/`true`/`false` | Toggle UI chrome |
+| `height` | `string \| number` | `480` | Container height |
+
+## Headless helpers (no React)
+
+```ts
+import { parseFlowchart, serializeFlowchart, detectPaths, layout } from '@yantrakit/flowchart-react';
+
+const graph = parseFlowchart('flowchart TD\n a --> b');
+const text  = serializeFlowchart(graph);   // round-trips
+const { paths } = detectPaths(graph);       // semantic paths
+const positioned = await layout(graph);     // dagre (or { engine: elkEngine })
+```

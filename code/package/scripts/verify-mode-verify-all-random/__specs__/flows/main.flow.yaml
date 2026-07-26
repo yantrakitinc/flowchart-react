@@ -1,0 +1,35 @@
+flow: main
+kind: helper
+source: verify-mode-verify-all-random.mjs
+symbol: main
+inputs:
+  io: optional IO ports — rootDir / findLocks / fraction / rng / resume / progressPath / spawn / execPath / modeAPath / modePristineAndCompliancePath / unlock / write / writeErr / verifyAll
+returns:
+  - "{ exitCode: 0 | 1, rows: Array<{ slice: string, verdict: 'pass' | 'fail', lastRun: string }> }"
+throws: []
+calls:
+  - findAllLocks (scripts/verify-mode-inspect/verify-mode-inspect.mjs)
+  - slicesFromLocks (scripts/verify-mode-e/verify-mode-e.mjs)
+  - sampleSubset (scripts/verify-mode-f-random/verify-mode-f-random.mjs)
+  - main (scripts/verify-mode-verify-all/verify-mode-verify-all.mjs)
+called_by:
+  - cliMain
+emits_events: []
+side_effects_on_success: ["sampled slices' lock files mutated; .verify-all-progress.json updated"]
+side_effects_on_failure: ["partial state; sampled slices that failed remain status:unlocked"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: cheap probabilistic deep audit
+  when_not_to_call: full deep ceremony or stamp-only modes
+  natural_language_examples:
+    - "mode verify-all-random"
+  agent_invocation: "internal — `node scripts/verify-mode-verify-all-random/verify-mode-verify-all-random.mjs`"
+  confirm_with_user_before: "mutates sampled locks"
+  summarize_to_user_after: "sample size + per-slice verdicts"
+paths:
+  happy:
+    - findLocks returns N → slicesFromLocks returns S → sampleSubset returns ceil(S * fraction) min 1
+    - verifyAll runs on sample; all pass; exit 0
+  error_one_slice_fails:
+    - any sampled slice fails Pristine+Compliance or Mode A; remains unlocked; aggregate exit 1

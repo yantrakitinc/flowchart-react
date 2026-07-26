@@ -1,0 +1,115 @@
+flow: FlowChart
+kind: composition-root
+source: src/react/FlowChart.tsx
+symbol: FlowChart
+
+inputs:
+  chart: "string? — Mermaid-like flowchart DSL text (mutually exclusive with `graph`; checked first when both are supplied)"
+  graph: "iFlowGraph? — the parsed IR object (mutually exclusive with `chart`)"
+  nodeTypes: "iNodeRegistry? — per-semantic-type component overrides merged over the rich defaults"
+  layoutEngine: "iLayoutEngine? — pluggable async layout strategy (default: dagre)"
+  direction: "iDirection? — 'TD'|'BT'|'LR'|'RL' override of the chart/graph's own direction"
+  activeNodeId: "string? — id of the node to visually highlight as active"
+  showPathDrawer: "boolean — default true"
+  pathDrawerPosition: "iDrawerPosition — default 'right'"
+  showMiniMap: "boolean — default false"
+  showControls: "boolean — default true"
+  className: "string — default ''"
+  height: "string|number — default 480"
+
+returns:
+  - "JSX.Element — the fc-root container with a React Flow canvas (nodes + edges + optional Background/Controls/MiniMap) and an optional PathDrawer, once layout resolves"
+  - "JSX.Element — a 'Laying out…' loading placeholder (data-agent-action=\"loading\") while the async layout engine is running"
+  - "JSX.Element — a role=alert, data-agent-action=\"parse-error\" box showing the parse failure's message, when neither prop resolves to a graph"
+
+throws: []
+
+calls:
+  - "parseFlowchart (../parse/parseFlowchart)"
+  - "layout (../layout/layout)"
+  - "resolveNodeTypes (./nodes/registry)"
+  - "toReactFlowEdge (./edges/edgeStyle)"
+  - "usePaths (./usePaths)"
+  - "PathDrawer (./PathDrawer)"
+  - "ReactFlow, Background, Controls, MiniMap (@xyflow/react)"
+
+called_by:
+  - "consumer application code (external — the package's published entry point, imported as `import { FlowChart } from '@yantrakit/flowchart-react'`)"
+
+emits_events: []
+
+side_effects_on_success:
+  - "schedules an async layout computation via the configured layoutEngine on mount and whenever the resolved graph changes; re-renders with computed node positions once it resolves"
+  - "invokes the onNodeClick / onPathChange callback props in response to user interaction; no internal state escapes the component beyond what those callbacks report"
+
+side_effects_on_failure: "none — a parse failure or a rejected layout renders a fallback UI state (error box, or an indefinite loading placeholder); no partial/inconsistent DOM is ever produced and no exception escapes to the caller"
+
+transaction: "none"
+
+test: src/react/FlowChart.test.tsx
+spec: src/react/__specs__/spec.yaml
+
+ai_agent_action:
+  when_to_call: "the user supplies flowchart-shaped content (Mermaid-like DSL text or an iFlowGraph object) and wants it rendered as an interactive, clickable diagram inside a React app"
+  when_not_to_call: "the target output is a static image/SVG export with no interactivity, or there is no React host to mount into"
+  natural_language_examples:
+    - "render this flowchart so users can click through it"
+    - "show this process as an interactive diagram with a path selector"
+    - "turn this Mermaid text into a live React component"
+  agent_invocation: "UI nav — mount <FlowChart chart={...} /> or <FlowChart graph={...} /> in a React tree; no HTTP call"
+  confirm_with_user_before: "none — read-only rendering, no data mutation"
+  summarize_to_user_after: "Rendered a <nodeCount>-node flowchart (or: reported a parse error at <line>:<column>)"
+
+paths:
+  happy:
+    - "chart (DSL string) is supplied"
+    - "parseFlowchart(chart, {direction?}) succeeds and returns an iFlowGraph"
+    - "the layout effect calls layoutEngine.run(graph, ctx); the promise resolves with computed positions"
+    - "positioned nodes are mapped into React Flow Node[] (label/type/direction/description/active/onSelectedPath/dimmed + any custom `data` passthrough) and positioned edges into Edge[] via toReactFlowEdge"
+    - "resolveNodeTypes(nodeTypes) merges any consumer overrides over the rich defaults"
+    - "ReactFlow renders every node + edge inside fc-root, plus Background, Controls (if showControls), MiniMap (if showMiniMap), and the PathDrawer (if showPathDrawer)"
+
+  edge_boundary_graph_object_input:
+    - "graph (IR object) is supplied instead of chart"
+    - "the parse step is skipped entirely; direction override (if any) is merged onto the graph object directly"
+    - "layout runs on the supplied graph exactly as it would on a parsed one; rendering is identical"
+
+  error_parse_failure:
+    - "chart is malformed Mermaid-like DSL"
+    - "parseFlowchart throws a FlowchartParseError (1-based line/column + reason)"
+    - "the surrounding try/catch in the `parsed` memo catches it; graph stays null, error is stored"
+    - "the component renders the fc-error box: role=alert, data-agent-action=\"parse-error\", the literal message string (\"line L:C: <reason>\") — a well-explained terminal; the only recovery is the caller supplying valid input, so 'terminal — explanation suffices'"
+
+  edge_boundary_neither_chart_nor_graph:
+    - "neither chart nor graph is supplied"
+    - "the memo's own guard throws `new FlowchartParseError('FlowChart requires either a \\`chart\\` or a \\`graph\\` prop', 1)`"
+    - "caught identically to error_parse_failure and rendered as the same error box"
+
+  edge_boundary_both_chart_and_graph_supplied:
+    - "both chart and graph are supplied simultaneously"
+    - "the chart branch is checked first (`typeof chart === 'string'`), so chart wins and graph is silently ignored"
+
+  edge_concurrent_stale_layout_supersede:
+    - "the resolved graph changes (new chart/graph/direction prop) while a previous layoutEngine.run() promise is still pending"
+    - "the effect's cleanup sets a `cancelled` flag scoped to that effect run before the new effect's layout call starts"
+    - "when the stale promise later resolves or rejects, `apply()` checks `cancelled` and is a no-op — the outdated result never overwrites the newer state, and no state update fires after unmount either (same guard)"
+
+  edge_partial_state_layout_engine_rejects:
+    - "the configured layoutEngine's run() rejects (e.g. a broken custom engine)"
+    - "the .then(apply, () => apply(null)) rejection handler calls apply(null)"
+    - "positioned stays null; the component renders the 'Laying out…' placeholder indefinitely — a safe, non-crashing fallback with no partial/inconsistent node or edge set ever rendered"
+
+mermaid: |
+  flowchart TD
+    A[chart or graph prop] -->|chart string| B[parseFlowchart]
+    A -->|graph object| C[graph as-is]
+    A -->|neither| E1[FlowchartParseError: missing prop]
+    B -->|throws| E2[FlowchartParseError: malformed DSL]
+    B -->|ok| D[resolved iFlowGraph]
+    C --> D
+    E1 --> ERR[render fc-error box]
+    E2 --> ERR
+    D --> L[layoutEngine.run]
+    L -->|resolves| POS[positioned nodes/edges]
+    L -->|rejects| LOAD[stays in Laying out placeholder]
+    POS --> RF[ReactFlow renders nodes + edges + drawer]

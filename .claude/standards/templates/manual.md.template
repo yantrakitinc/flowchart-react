@@ -1,0 +1,26 @@
+# <flow>
+
+> Copy-paste this whole file into the Claude Code Chrome extension. It runs the steps
+> unattended, then POSTs the results (and prints them so you can copy them back too).
+> See MANUAL_FLOWS.yaml `manual_md` for the schema. Lives at:
+> <feature-folder>/__specs__/manual/<flow>.md
+
+## Target
+local — http://localhost:<port>    <!-- or: live — https://<app>.yantrakit.com when testing the deployed surface -->
+
+## Preconditions
+- <what must be true first: an auth token, a seeded row, a peer service running; write "none" if nothing>
+
+## Steps
+1. <action — e.g. "POST /v1/<resource> with a VALID body and a token that holds the scope"> → expected: <e.g. "201, body.id present">
+2. <ADVERSARIAL action — cross authority — e.g. "POST the same with ANOTHER principal's id"> → expected: <e.g. "403 FORBIDDEN_*, no row written">
+3. <ADVERSARIAL action — abuse input — e.g. "POST a malformed / oversized body"> → expected: <e.g. "400 VALIDATION_*">
+4. <ADVERSARIAL action — replay / race / missing auth — e.g. "repeat step 1 with no token"> → expected: <e.g. "401">
+
+## Assertions
+- MUST hold: <the positive guarantees, e.g. "the valid call persisted exactly one row">
+- MUST NOT happen: <the negative guarantees — e.g. "no cross-principal write; no 500; no unscoped data leaked in any response">
+
+## Report
+POST the results of every step (step number, what you did, observed status/body, pass/fail) to
+`/api/v1/manual-results/<flow>` on the Target base URL, AND print the same results here so they can be copied by hand.

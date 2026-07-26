@@ -1,0 +1,127 @@
+# <ComponentName> — design
+
+> Lives at `src/components/ui/<ComponentName>/__specs__/design.md`.
+> Fill every `<PLACEHOLDER>`. Delete any section that genuinely doesn't apply with a one-line `n/a — <reason>` (keep the heading so verifier sees it).
+> The `<!-- design-locked: YYYY-MM-DD -->` marker at the BOTTOM is inserted by the USER on approval. Spec-writer NEVER self-signs.
+
+## Anatomy diagram
+
+```
++--------------------------------------------------+
+|  <ASCII / unicode-box sketch naming every part   |
+|   of the component at rest. Show start_icon,     |
+|   label, end_icon, spinner slot, focus ring,     |
+|   etc. Crude is fine; this aligns on structure>  |
++--------------------------------------------------+
+```
+
+Parts named:
+1. `<part_name>` — <one-line role>
+2. `<part_name>` — <one-line role>
+
+## State matrix
+
+Exhaustive matrix of `variant × color × size × state`. Each cell binds to tokens + shared state classes — never inline values.
+
+|  | rest | hover | focus-visible | active | pressed | disabled | loading |
+|---|---|---|---|---|---|---|---|
+| `<variant>.<color>.<size>` | <bg-token + fg-token> | `state-hover-<surface>` | `state-focus-visible` | `state-active-<surface>` | `<state-class-or-na>` | `state-disabled` | `state-loading` |
+| `<variant>.<color>.<size>` | … | … | … | … | … | … | … |
+
+(Repeat the row per shipped combination. Defer un-shipped combinations in spec.yaml.deferred.)
+
+### Cross-variant consistency rule
+
+> All `<variant>` variants of `<ComponentName>` share `<state-class>` on `<state>`, regardless of `<color>` or `<size>`. The same rule applies to every other state row.
+
+This is the contract `verify-component-state-vocab.mjs` enforces in the cva config.
+
+## Token bindings
+
+| Part | State | Token |
+|---|---|---|
+| `<part_name>` | rest.bg | `var(--color-<token>)` |
+| `<part_name>` | rest.fg | `var(--color-<token>)` |
+| `<part_name>` | hover.bg | inherits from `state-hover-<surface>` (no direct override) |
+
+## ARIA pattern
+
+Reference: <WAI-ARIA APG URL>
+What we use from the pattern:
+1. Role: `<role>`
+2. State attrs: `aria-pressed` / `aria-busy` / `aria-disabled` / `aria-expanded` / `aria-controls` / `aria-label` — list what the component uses
+3. Property attrs: `aria-describedby` / `aria-labelledby` — list what it uses
+
+If `n/a`, state why: e.g., "n/a — no APG pattern matches; falls back to native semantics."
+
+## Keyboard interactions
+
+| Key | Action |
+|---|---|
+| `Tab` | <focus next> |
+| `Shift+Tab` | <focus previous> |
+| `Enter` | <action-on-button> |
+| `Space` | <same-as-enter-for-buttons> |
+| `<other>` | <action> |
+
+## Responsive strategy
+
+How the component adapts:
+- Mobile (<480px): <changes>
+- Tablet (481–1024px): <changes>
+- Desktop (1025+): <changes>
+
+If `n/a`: "n/a — fixed-size icon; doesn't reflow."
+
+## Forced-colors strategy
+
+Under `@media (forced-colors: active)`:
+- Background: `<Canvas | ButtonFace | …>`
+- Foreground: `<CanvasText | ButtonText | …>`
+- Border: `<ButtonText | CanvasText | …>`
+- Focus ring: `<Highlight | …>`
+
+If inherited from globals.css, say so + name the rule path.
+
+## Reduced-motion strategy
+
+Under `@media (prefers-reduced-motion: reduce)`:
+- Transitions: <preserved | disabled>
+- Animations: <preserved | disabled>
+
+If inherited from globals.css, say so.
+
+## RTL strategy
+
+- Layout: <mirrored | symmetric | not-yet-supported>
+- Icons: <mirrored | preserved>
+
+If `n/a`: "n/a — fully symmetric layout."
+
+## Edge cases
+
+| Case | Handling |
+|---|---|
+| Long text | <wraps / truncates / overflows> |
+| Empty children | <renders | error | falls back to placeholder> |
+| Icon-only without label | <dev-mode throw | renders | falls back> |
+| Very narrow parent | <wraps | scrolls | clamps to min-width> |
+| Disabled during loading | <state precedence rule> |
+| <add more cases as discovered> | … |
+
+## Composition rules
+
+- Containers this typically lives inside: <toolbar, dialog action row, form field group, …>
+- Primitives this consumes: <Spinner | Slot | none>
+- Primitives that consume this: <Dialog action slot, Alert action slot, …>
+
+## Open decisions
+
+Decisions awaiting user input before the design can be locked:
+1. <decision>: options A/B/C with recommendation.
+
+(Once all decisions are resolved, this section reads "None. All decisions resolved on <date> in <issue or thread>.")
+
+---
+
+<!-- design-locked: YYYY-MM-DD -->

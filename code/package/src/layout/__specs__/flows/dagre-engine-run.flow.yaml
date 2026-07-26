@@ -1,0 +1,72 @@
+flow: dagreEngine.run
+kind: service-method
+source: src/layout/dagreEngine.ts
+symbol: dagreEngine
+
+inputs:
+  graph: "iFlowGraph — nodes[] and edges[] to lay out"
+  ctx: "iEngineContext — { direction, nodeWidth, nodeHeight, rankSpacing, nodeSpacing }, all resolved (no undefined fields)"
+
+returns:
+  - "Promise<iPositions> — Map<nodeId, {x,y}> top-left coordinates for every node in graph.nodes, always resolved (dagre's layout is synchronous; wrapped in Promise.resolve)"
+
+throws: []
+
+calls:
+  - "new dagre.graphlib.Graph()"
+  - "g.setGraph({ rankdir, ranksep, nodesep })"
+  - "g.setNode() per graph.node"
+  - "g.setEdge() per graph.edge whose from AND to both exist in graph.nodes"
+  - "dagre.layout(g)"
+  - "g.node(id) per graph.node, to read the laid-out center"
+
+called_by:
+  - "layout() (the default engine when options.engine is omitted)"
+
+emits_events: []
+
+side_effects_on_success:
+  - "none — builds a throwaway dagre graph instance internally; returns a fresh Map, the input graph/ctx are never mutated"
+
+side_effects_on_failure: "none"
+
+transaction: none
+
+test: src/layout/engines.test.ts
+spec: src/layout/__specs__/spec.yaml
+
+ai_agent_action:
+  when_to_call: "Never called directly by an agent — it is layout()'s default strategy, selected implicitly."
+  when_not_to_call: "n/a — internal collaborator, not a standalone entry point"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable directly; reached only via layout()"
+  confirm_with_user_before: "none — read-only, pure computation"
+  summarize_to_user_after: "n/a — summarized at the layout() call site"
+
+paths:
+  happy:
+    - "rankdir(ctx.direction) maps TD->TB, BT->BT, LR->LR, RL->RL"
+    - "g.setGraph({ rankdir, ranksep: ctx.rankSpacing, nodesep: ctx.nodeSpacing })"
+    - "every graph.node is g.setNode'd with { width: ctx.nodeWidth, height: ctx.nodeHeight }"
+    - "dagre.layout(g) computes centers for every node"
+    - "each node's dagre center {x,y} is converted to top-left: { x: laid.x - nodeWidth/2, y: laid.y - nodeHeight/2 }"
+    - "the resulting Map is returned via Promise.resolve"
+  edge_direction_mapping:
+    - "TD -> dagre rankdir 'TB' (dagre has no native TD; TB is its top-down equivalent)"
+    - "BT -> 'BT', LR -> 'LR', RL -> 'RL' (passed through unchanged)"
+  edge_dangling_edge_filtered:
+    - "an edge whose from or to references a node id absent from graph.nodes is NEVER g.setEdge'd — the `graph.nodes.some(...)` guard on both endpoints skips it silently, preventing dagre from erroring on an unknown node reference"
+  edge_boundary_empty_graph:
+    - "graph.nodes is empty — no g.setNode calls, dagre.layout(g) runs on an empty graph, an empty Map is returned"
+
+mermaid: |
+  flowchart TD
+    A[dagreEngine.run graph, ctx] --> B[new dagre Graph; setGraph rankdir/ranksep/nodesep]
+    B --> C[setNode for every graph.node]
+    C --> D{edge endpoints both exist in graph.nodes?}
+    D -->|yes| E[setEdge]
+    D -->|no| F[skip edge]
+    E --> G[dagre.layout g]
+    F --> G
+    G --> H[convert each node center -> top-left]
+    H --> I[return Map of id -> x,y]

@@ -1,0 +1,65 @@
+flow: isDirection
+kind: predicate
+source: src/ir/types.ts
+symbol: isDirection
+
+inputs:
+  value: "unknown — any value to narrow, typically a string extracted from parsed Mermaid direction syntax (e.g. 'flowchart TD') or an external JSON payload"
+
+returns:
+  - "true — value is a string AND a member of DIRECTIONS (narrows value to iDirection)"
+  - "false — value is not a string, OR is a string not present in DIRECTIONS"
+
+throws: []
+calls:
+  - "DIRECTIONS (module-level constant array) via Array.prototype.includes"
+called_by:
+  - src/parse/parseFlowchart.ts
+emits_events: []
+
+side_effects_on_success:
+  - "none"
+side_effects_on_failure: "none"
+transaction: "none"
+
+test: src/ir/types.test.ts
+spec: src/ir/__specs__/spec.yaml
+
+ai_agent_action:
+  when_to_call: "Before trusting an untyped string as an iDirection — e.g. parseFlowchart narrowing a parsed Mermaid direction token to the graph's layout direction."
+  when_not_to_call: "When the value's type is already statically known to be iDirection (redundant); when checking anything other than a single scalar direction value."
+  natural_language_examples:
+    - "is 'LR' a valid direction?"
+    - "check whether this parsed direction token is legal"
+  agent_invocation: "internal — not callable over HTTP/UI; import isDirection from '@yantrakit/flowchart-react' (or 'src/ir' inside this repo) and call it directly"
+  confirm_with_user_before: "none — read-only, pure, no side effects"
+  summarize_to_user_after: "'{value}' is / is not a legal direction."
+
+paths:
+  happy:
+    - step: "Caller passes each of the 4 DIRECTIONS members ('TD', 'BT', 'LR', 'RL')."
+    - step: "typeof value === 'string' evaluates true for each."
+    - step: "DIRECTIONS.includes(value) evaluates true for each."
+    - step: "Function returns true, narrowing value to iDirection."
+  edge_boundary_unrecognized_string:
+    - step: "Caller passes a plausible-looking but illegal string (e.g. 'TB' — the real Mermaid direction token this package does NOT alias to 'TD')."
+    - step: "typeof value === 'string' evaluates true."
+    - step: "DIRECTIONS.includes(value) evaluates false."
+    - step: "Function returns false — no throw, no aliasing, no case-folding."
+  edge_boundary_empty_string:
+    - step: "Caller passes an empty string ''."
+    - step: "typeof value === 'string' evaluates true."
+    - step: "DIRECTIONS.includes('') evaluates false (empty string is not a member)."
+    - step: "Function returns false."
+  edge_boundary_non_string_input:
+    - step: "Caller passes a non-string value (e.g. an object or undefined)."
+    - step: "typeof value === 'string' short-circuits to false before .includes() runs."
+    - step: "Function returns false uniformly for every non-string input, regardless of shape."
+
+mermaid: |
+  flowchart TD
+    A[isDirection value] --> B{typeof value equals string}
+    B -- no --> F[return false]
+    B -- yes --> C{DIRECTIONS includes value}
+    C -- no --> F
+    C -- yes --> T[return true]

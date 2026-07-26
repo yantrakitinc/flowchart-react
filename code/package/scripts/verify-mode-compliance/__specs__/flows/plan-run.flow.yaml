@@ -1,0 +1,37 @@
+flow: planRun
+kind: pure-helper
+source: scripts/verify-mode-compliance/verify-mode-compliance.mjs
+symbol: planRun
+inputs:
+  mode: "{ full: boolean, scope: boolean }"
+  changed: "absolute paths (only consulted when mode.scope is true)"
+  catalog: "ReadonlyArray<iScriptEntry>"
+returns:
+  - "{ toRun: iScriptEntry[], skipped: Array<{ entry, reason }> }"
+throws: []
+calls:
+  - entry.territory
+called_by:
+  - main
+emits_events: []
+side_effects_on_success: ["none — pure"]
+side_effects_on_failure: "none — pure"
+transaction: none
+test: scripts/verify-mode-compliance/__tests__/verify-mode-compliance.test.mjs
+spec: scripts/verify-mode-compliance/__specs__/spec.yaml
+ai_agent_action:
+  when_to_call: "internal — only main composes planRun"
+  when_not_to_call: "external callers"
+  natural_language_examples: []
+  agent_invocation: "internal — not callable"
+  confirm_with_user_before: "none — pure"
+  summarize_to_user_after: "n/a — internal helper"
+paths:
+  happy_default:
+    - mode.full=false, mode.scope=false → every non-fullOnly entry runs
+  happy_full:
+    - mode.full=true → fullOnly entries included
+  happy_scope:
+    - mode.scope=true → entries whose territory(changed) is true run; others skipped with reason 'no changed paths in territory'
+  edge_fullonly_skipped_without_full:
+    - mode.full=false → fullOnly entries skipped with reason 'fullOnly — only runs in --full mode'

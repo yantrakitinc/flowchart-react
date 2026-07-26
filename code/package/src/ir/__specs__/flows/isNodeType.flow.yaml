@@ -1,0 +1,60 @@
+flow: isNodeType
+kind: predicate
+source: src/ir/types.ts
+symbol: isNodeType
+
+inputs:
+  value: "unknown — any value to narrow, typically a string extracted from a parsed Mermaid class token or an external JSON payload"
+
+returns:
+  - "true — value is a string AND a member of NODE_TYPES (narrows value to iNodeType)"
+  - "false — value is not a string, OR is a string not present in NODE_TYPES"
+
+throws: []
+calls:
+  - "NODE_TYPES (module-level constant array) via Array.prototype.includes"
+called_by:
+  - src/parse/parseFlowchart.ts
+emits_events: []
+
+side_effects_on_success:
+  - "none"
+side_effects_on_failure: "none"
+transaction: "none"
+
+test: src/ir/types.test.ts
+spec: src/ir/__specs__/spec.yaml
+
+ai_agent_action:
+  when_to_call: "Before trusting an untyped string as an iNodeType — e.g. parseFlowchart narrowing a parsed Mermaid class token to a node's semantic kind."
+  when_not_to_call: "When the value's type is already statically known to be iNodeType (redundant); when checking anything other than a single scalar node-type value."
+  natural_language_examples:
+    - "is 'decision' a valid node type?"
+    - "check whether this parsed class name is a legal node kind"
+  agent_invocation: "internal — not callable over HTTP/UI; import isNodeType from '@yantrakit/flowchart-react' (or 'src/ir' inside this repo) and call it directly"
+  confirm_with_user_before: "none — read-only, pure, no side effects"
+  summarize_to_user_after: "'{value}' is / is not a legal node type."
+
+paths:
+  happy:
+    - step: "Caller passes each of the 7 NODE_TYPES members ('start', 'end', 'action', 'decision', 'error', 'warning', 'link')."
+    - step: "typeof value === 'string' evaluates true for each."
+    - step: "NODE_TYPES.includes(value) evaluates true for each."
+    - step: "Function returns true, narrowing value to iNodeType."
+  edge_boundary_unrecognized_string:
+    - step: "Caller passes a plausible-looking but illegal string (e.g. 'process' — a shape name that isn't in NODE_TYPES)."
+    - step: "typeof value === 'string' evaluates true."
+    - step: "NODE_TYPES.includes(value) evaluates false."
+    - step: "Function returns false — no throw, no partial match, no case-folding, no closest-match guess."
+  edge_boundary_non_string_input:
+    - step: "Caller passes a non-string value (e.g. the number 42, or undefined)."
+    - step: "typeof value === 'string' short-circuits to false before .includes() runs."
+    - step: "Function returns false uniformly for every non-string input, regardless of shape."
+
+mermaid: |
+  flowchart TD
+    A[isNodeType value] --> B{typeof value equals string}
+    B -- no --> F[return false]
+    B -- yes --> C{NODE_TYPES includes value}
+    C -- no --> F
+    C -- yes --> T[return true]

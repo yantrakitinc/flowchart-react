@@ -1,0 +1,19 @@
+# `<feature-folder-path>` — <one-line tagline>
+
+## Concept
+
+<One paragraph: what this folder is, why it exists. Prose only. The
+machine contract lives in `spec.yaml`; this file is for the human
+reader who needs context the YAML can't carry.>
+
+## Files
+
+1. `<file1>.ts` — <one-line description>
+2. `<file2>.ts` — <one-line description>
+3. (continue for every behavior + SETUP file in this folder)
+
+## Out of scope
+
+- <Thing this folder explicitly does NOT do>
+- <Another thing it doesn't do>
+- <Pointer to where the excluded concern lives if it lives somewhere>

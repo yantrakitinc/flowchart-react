@@ -1,0 +1,24 @@
+# .ignore.specs.yaml — marker file declaring spec coverage for the folder
+# it sits in (and every subfolder, until a deeper marker overrides).
+#
+# Two valid contents:
+#
+# 1. EMPTY (or whitespace-only / comments-only): the folder is
+#    deliberately exempt from spec coverage. Use for true cross-cutting
+#    code that has no single owning feature (e.g., shared lib utilities).
+#
+# 2. ONE field naming a parent feature:
+#
+#      feature_name: <parent-feature-name>
+#
+#    The named feature MUST exist as some other folder's
+#    __specs__/spec.yaml.feature_name. Use this when a folder's code is
+#    logically owned by another feature whose spec lives elsewhere (a
+#    route handler whose contract is documented in a feature folder, a
+#    server-only adapter consumed by one feature, etc.).
+#
+# Inheritance: a deeper .ignore.specs.yaml overrides shallower; the
+# closest marker (__specs__ OR .ignore) walked up from a source file
+# wins.
+
+feature_name: <parent-feature-name>

@@ -1,0 +1,44 @@
+flow: main
+kind: helper
+source: verify-mode-inspect.mjs
+symbol: main
+inputs:
+  io: optional IO ports — rootDir / findLocks / readFile / gitLastCommit / write
+returns:
+  - "{ exitCode: 0, rows: Array<{ lockPath: string, status: string, lastValidated: string, freshness: 'fresh' | 'stale' | 'unknown' }>, summary: { text: string, lockedCount: number, unlockedCount: number, otherCount: number, staleCount: number } }"
+throws: []
+calls:
+  - findAllLocks (recursive directory walk; skips SKIP_DIRS)
+  - inspectLock (per-lock status + freshness probe)
+  - formatReport (text + counts)
+  - parseScalarFields (scripts/verify-mode-d/verify-mode-d.mjs)
+  - checkFreshness (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+  - defaultGitLastCommit (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+called_by:
+  - cliMain
+emits_events: []
+side_effects_on_success: ["writes report to stdout"]
+side_effects_on_failure: ["none — main always returns exitCode 0"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: state walk request OR pre-mode-pick reconnaissance
+  when_not_to_call: stamp mutation (Mode A/C/E) OR validation gate (Mode B/B.5/D/F/F-Random)
+  natural_language_examples:
+    - "inspect every lock"
+    - "show me stale stamps"
+  agent_invocation: "internal — `node scripts/verify-mode-inspect/verify-mode-inspect.mjs`"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "Mode Inspect: <N> lock(s) — counts by status + stale count"
+paths:
+  happy:
+    - findAllLocks walks rootDir, collecting every __specs__/standards-compliance.yaml
+    - per-lock inspectLock parses status + last_validated; computes freshness via git when status:locked + stamp parses
+    - formatReport assembles per-lock lines + summary counts
+    - write the report; exit 0
+  edge_no_locks:
+    - findAllLocks returns []; report shows "0 lock(s) found"; exit 0
+  edge_unreadable_dir:
+    - walk's recursive helper catches the readDir error for that subtree; continues other subtrees
+  edge_malformed_lock:
+    - readFile throws OR status field missing OR last_validated unparseable; row marks status (unreadable)/(missing); freshness "unknown"; exit still 0

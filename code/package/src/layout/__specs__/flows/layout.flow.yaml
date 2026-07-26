@@ -1,0 +1,83 @@
+flow: layout
+kind: composition-root
+source: src/layout/layout.ts
+symbol: layout
+
+inputs:
+  graph: "iFlowGraph — the IR diagram (id, name, direction, nodes[], edges[])"
+  options: "iLayoutOptions — optional; { engine?, nodeWidth?, nodeHeight?, rankSpacing?, nodeSpacing? }, every field defaulted when omitted"
+
+returns:
+  - "Promise<iPositionedGraph> — { direction, nodes: iPositionedNode[], edges: iRenderEdge[] } on success"
+  - "a rejected Promise carrying the chosen engine's rejection, unchanged, when engine.run() rejects"
+
+throws:
+  - "Error — propagated verbatim from options.engine.run() rejection (e.g. elkEngine's 'elkjs' not installed error); layout() has no try/catch of its own"
+
+calls:
+  - "options.engine.run() (dagreEngine.run by default, or any injected iLayoutEngine)"
+
+called_by:
+  - "src/react (the React Flow adapter layer) before rendering"
+  - "any consumer of the published package's public API"
+
+emits_events: []
+
+side_effects_on_success:
+  - "none — pure computation; returns a freshly built iPositionedGraph object, never mutates the input graph"
+
+side_effects_on_failure: "none — the returned promise rejects; nothing is written, nothing is left half-built"
+
+transaction: none
+
+test: src/layout/layout.test.ts
+spec: src/layout/__specs__/spec.yaml
+
+ai_agent_action:
+  when_to_call: "An agent holds an iFlowGraph and needs on-screen positions before rendering with React Flow."
+  when_not_to_call: "The graph is already positioned, or only IR manipulation (no rendering) is needed."
+  natural_language_examples:
+    - "lay out this flowchart"
+    - "auto-arrange the diagram left-to-right"
+    - "swap to the ELK engine for a denser layout"
+  agent_invocation: "internal — imported and awaited in-process; `import { layout } from '@yantrakit/flowchart-react'`"
+  confirm_with_user_before: "none — read-only, pure computation"
+  summarize_to_user_after: "Report the returned node count + direction on success; report the rejection message on failure."
+
+paths:
+  happy:
+    - "engine defaults to dagreEngine when options.engine is omitted"
+    - "ctx is built from graph.direction plus nodeWidth/nodeHeight/rankSpacing/nodeSpacing, each defaulted (180/64/80/48) when the corresponding option is omitted"
+    - "await engine.run(graph, ctx) resolves an iPositions Map keyed by node id"
+    - "every graph.node is mapped to an iPositionedNode: id/type/label copied, description/data copied only when defined, position read from the Map (or {0,0} — see edge_missing_position_defaults), width/height set from ctx"
+    - "every graph.edge is mapped to an iRenderEdge: id copied, source=edge.from, target=edge.to, type copied, label copied only when defined"
+    - "the resolved { direction, nodes, edges } is returned"
+  error_engine_run_rejects:
+    - "options.engine.run() rejects (e.g. elkEngine chosen without 'elkjs' installed)"
+    - "the rejection propagates unchanged through layout()'s returned promise — no wrapping, no swallowing"
+  edge_boundary_empty_graph:
+    - "graph.nodes and graph.edges are both empty arrays"
+    - "engine.run() resolves an empty Map; layout() returns { direction, nodes: [], edges: [] }"
+  edge_missing_position_defaults:
+    - "engine.run() resolves a Map that omits one or more node ids present in graph.nodes"
+    - "each omitted node's position defaults to { x: 0, y: 0 } via `positions.get(n.id) ?? { x: 0, y: 0 }`"
+  edge_default_options_applied:
+    - "options is omitted entirely (layout(graph) with one argument)"
+    - "DEFAULTS (nodeWidth 180, nodeHeight 64, rankSpacing 80, nodeSpacing 48) and dagreEngine are all applied without the caller specifying any of them"
+  edge_optional_fields_passthrough:
+    - "a node's description/data are undefined → the positioned node omits those keys entirely (conditional spread, not `description: undefined`)"
+    - "a node's description/data are present → the positioned node carries them verbatim"
+    - "an edge's label is undefined vs present → same conditional-spread behavior on iRenderEdge.label"
+  edge_boundary_dangling_edge_reference:
+    - "graph.edges contains an edge whose from/to references a node id absent from graph.nodes"
+    - "layout() maps it into iRenderEdge unchanged (it does NOT filter dangling edges) — only the chosen engine's internal graph-building step filters such edges before feeding its underlying layout library; the returned edges array may reference a node position that defaults to {0,0} for the dangling side if that id happens to coincide with an omitted node, or simply source/target an id absent from `nodes` entirely"
+
+mermaid: |
+  flowchart TD
+    A[layout called with graph + options] --> B[resolve engine: options.engine ?? dagreEngine]
+    B --> C[build iEngineContext: direction + nodeWidth/nodeHeight/rankSpacing/nodeSpacing, defaulted]
+    C --> D{await engine.run graph, ctx}
+    D -->|resolves iPositions Map| E[map graph.nodes -> iPositionedNode using positions.get id ?? 0,0]
+    D -->|rejects| F[propagate rejection unchanged]
+    E --> G[map graph.edges -> iRenderEdge: source=from, target=to]
+    G --> H[return iPositionedGraph]

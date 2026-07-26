@@ -1,0 +1,45 @@
+flow: main
+kind: helper
+source: verify-mode-b.mjs
+symbol: main
+inputs:
+  io: optional IO ports — rootDir / getChanged / readFile / gitLastCommit / write / writeErr
+returns:
+  - "{ exitCode: 0 | 1, locksChecked: string[], failures: Array<{ lock: string, gate: 'shape' | 'freshness', reason: string }> }"
+throws: []
+calls:
+  - getHeadChangedPaths (default for getChanged)
+  - locksFromChangedPaths (scripts/verify-mode-d/verify-mode-d.mjs)
+  - checkLockShape (scripts/verify-mode-d/verify-mode-d.mjs)
+  - checkFreshness (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+  - defaultGitLastCommit (scripts/verify-standards-freshness/verify-standards-freshness.mjs)
+called_by:
+  - cliMain
+emits_events: []
+side_effects_on_success: ["none"]
+side_effects_on_failure: ["none"]
+transaction: none
+spec: ../spec.yaml
+ai_agent_action:
+  when_to_call: after Mode A (or routine post-commit gate)
+  when_not_to_call: branch-level (Mode D) or repo-level (Mode F)
+  natural_language_examples:
+    - "mode B"
+    - "validate the last commit's stamps"
+  agent_invocation: "internal — `node scripts/verify-mode-b/verify-mode-b.mjs`"
+  confirm_with_user_before: "none — read-only"
+  summarize_to_user_after: "Mode B verdict + per-lock failure breakdown"
+paths:
+  happy:
+    - getChanged returns N paths from `git diff-tree --no-commit-id --name-only -r HEAD`
+    - locksFromChangedPaths resolves each to its slice lock
+    - per-lock: shape pass + freshness pass
+    - print "verify-mode-b: OK" + exit 0
+  edge_no_changes:
+    - HEAD has no changed paths (root commit fallback returns []); exit 0 with informational message
+  edge_no_spec_slices:
+    - changed paths don't resolve to any spec'd slice; exit 0
+  error_shape_fail:
+    - lock status/verified/last_validated does not match contract; gate=shape; exit 1
+  error_freshness_fail:
+    - git log shows a commit on the slice after last_validated + grace; gate=freshness; exit 1
