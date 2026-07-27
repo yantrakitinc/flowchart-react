@@ -1,6 +1,6 @@
 {
   "name": "@yantrakit/flowchart-react",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Mermaid-like, AI-first React flowchart library — author diagrams as text or object, rendered on React Flow with semantic path detection.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -94,7 +94,7 @@
   "bugs": {
     "url": "https://github.com/yantrakitinc/flowchart-react/issues"
   },
-  "homepage": "https://github.com/yantrakitinc/flowchart-react#readme",
+  "homepage": "https://yantrakit.com/flowchart-react",
   "dependencies": {
     "@xyflow/react": "^12.11.2",
     "dagre": "^0.8.5"
