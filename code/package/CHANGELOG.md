@@ -4,6 +4,64 @@ All notable changes to this project will be documented here.
 
 ---
 
+## [2.0.1] - 2026-07-27
+
+### Added
+
+- **Package README** - `code/package/README.md`, so the npm page shows the library rather than nothing
+
+### Changed
+
+- **Homepage** - retargeted to `yantrakit.com/flowchart-react`
+
+---
+
+## [2.0.0] - 2026-07-26
+
+**A clean break. There is no compatibility shim** - the v1 `flow` prop is gone and v2 authors
+diagrams as text or as an IR object. See [`MIGRATION.md`](https://github.com/yantrakitinc/flowchart-react/blob/main/MIGRATION.md).
+
+### Added
+
+- **Text authoring** - a Mermaid-familiar DSL on the `chart` prop. `flowchart TD`, node shapes
+  (`[]` action, `{}` decision, `([])` start/end), edge glyphs (`-->`, `-.->`, `==>`), `|labels|`,
+  `:::type` overrides, `%%` comments and `A --> B --> C` chains
+- **Object authoring** - the `graph` prop takes an `iFlowGraph` directly
+- **React Flow rendering** - `@xyflow/react` replaces the custom SVG stack, bringing real pan,
+  zoom, minimap and edge routing
+- **Pluggable layout** - `dagreEngine` by default, `elkEngine` opt-in behind an optional `elkjs`
+  peer, both honouring `TD` / `BT` / `LR` / `RL`
+- **Semantic path detection** - `detectPaths()` returns every start-to-end path with its type
+- **Node type registry** - `defaultNodeTypes` and `resolveNodeTypes()`, so a consumer can replace
+  any node component
+- **Movie mode** - autoplay that steps a path node by node, emitting
+  `onPlaybackStep(nodeId, index, data)`, with play / pause / restart controls and optional loop
+- **Parse errors are structured** - `FlowchartParseError { line, column, reason }`, rendered as an
+  inline error box inside `<FlowChart>`
+- **A published JSON schema** - importable at `@yantrakit/flowchart-react/schema`
+- **Stable selectors** - `data-testid` and `data-agent-action` on nodes, the path drawer and the
+  playback controls, documented in `AGENTS.md`
+
+### Changed
+
+- **`iFlowDefinition` is now `iFlowGraph`**, and `direction` is required
+- **Edges require `id` and `type`** - use `'default'` where the edge carries no meaning
+- **`onNodeClick(node)` is now `onNodeClick(nodeId, data)`** - TypeScript catches this; JavaScript
+  does not
+- **Node type `'process'` is now `'action'`**
+
+### Removed
+
+- The `flow` prop, `iFlowDefinition`, `calculateLayout`, and `getNodeColor` / `getEdgeColor` /
+  `getPathColor` / `getPathBgColor`
+
+### Not supported
+
+Subgraphs, non-flowchart Mermaid diagram types, and Mermaid styling directives. Named here because
+a list of what exists cannot be told apart from a list that is merely incomplete.
+
+---
+
 ## [1.1.5] - 2026-03-14
 
 ### Fixed
