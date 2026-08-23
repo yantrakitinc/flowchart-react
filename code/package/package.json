@@ -1,7 +1,7 @@
 {
   "name": "@yantrakit/flowchart-react",
   "version": "2.0.1",
-  "description": "Mermaid-like, AI-first React flowchart library — author diagrams as text or object, rendered on React Flow with semantic path detection.",
+  "description": "Mermaid-like, AI-first React flowchart library \u2014 author diagrams as text or object, rendered on React Flow with semantic path detection.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -28,12 +28,13 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "prepublishOnly": "pnpm build",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "STORYBOOK_BASE=/flowchart-react/ storybook build -o storybook-static",
+    "storybook": "pnpm changelog && storybook dev -p 6006",
+    "build-storybook": "pnpm changelog && STORYBOOK_BASE=/flowchart-react/ storybook build -o storybook-static",
     "test:stories": "test-storybook --url http://127.0.0.1:41495 --maxWorkers=2",
     "verify:stories": "start-server-and-test 'storybook dev -p 41495 --no-open --quiet' http://127.0.0.1:41495 'pnpm test:stories'",
-    "e2e": "node -e \"console.log('no e2e scope — rendering primitive; E2E_TESTING: NOT REQUIRED (see src/react/__specs__/standards-compliance.md)')\"",
-    "verify": "pnpm typecheck && pnpm lint && pnpm test:run && node scripts/verify-all.mjs && pnpm verify:stories"
+    "e2e": "node -e \"console.log('no e2e scope \u2014 rendering primitive; E2E_TESTING: NOT REQUIRED (see src/react/__specs__/standards-compliance.md)')\"",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test:run && node scripts/verify-all.mjs && pnpm verify:stories",
+    "changelog": "node scripts/generate-changelog-mdx.mjs"
   },
   "peerDependencies": {
     "elkjs": ">=0.9.0",
